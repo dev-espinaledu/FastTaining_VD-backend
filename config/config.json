@@ -1,23 +1,34 @@
 {
   "development": {
-    "username": "root",
-    "password": null,
-    "database": "db",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "username": "fast-training_owner",
+    "password": "npg_fgy8nA9aCDXR",
+    "database": "fast-training",
+    "host": "ep-jolly-sky-a8ucqzga-pooler.eastus2.azure.neon.tech",
+    "port": 4000,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   },
   "test": {
-    "username": "root",
-    "password": null,
-    "database": "db",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "username": "fast-training_owner",
+    "password": "npg_fgy8nA9aCDXR",
+    "database": "fast-training",
+    "host": "ep-jolly-sky-a8ucqzga-pooler.eastus2.azure.neon.tech",
+    "port": 4000,
+    "dialect": "postgres",
+    "ssl": true
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "db",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "username": "fast-training_owner",
+    "password": "npg_fgy8nA9aCDXR",
+    "database": "fast-training",
+    "host": "ep-jolly-sky-a8ucqzga-pooler.eastus2.azure.neon.tech",
+    "port": 4000,
+    "dialect": "postgres",
+    "ssl": true
   }
 }
