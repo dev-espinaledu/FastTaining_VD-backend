@@ -15,7 +15,7 @@ app.use("/api", usuarios);
 app.use("/api", jugadores);
 app.use("/api", persona);
 app.use("/api", rol);
-// app.use("/api", entrenadorRoutes);
+app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
 
 app.listen(5000, () => {
