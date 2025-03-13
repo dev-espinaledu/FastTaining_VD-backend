@@ -5,10 +5,12 @@ const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 app.use(express.json());
 
+app.use("/api/auth", authRoutes);
 app.use("/api", usuarios);
 app.use("/api", jugadores);
 app.use("/api", persona);
