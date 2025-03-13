@@ -18,9 +18,9 @@ module.exports = (sequelize, DataTypes) => {
       peso: DataTypes.FLOAT, // en kg
       resistencia: DataTypes.SMALLINT, // vo2 max en ml/kg/min
       fuerza: DataTypes.SMALLINT, // salto vertical en cm
-      velocidad: DataTypes.SMALLINT, // sprint de 30m en segundos
+      velocidad: DataTypes.SMALLINT, // km/h
       potencia: DataTypes.SMALLINT, //potencia relativa en w/kg
-      equipoId: {
+      equipo_id: {
         type: DataTypes.SMALLINT,
         references: {
           model: "equipos",

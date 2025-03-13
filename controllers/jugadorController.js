@@ -2,11 +2,12 @@ const pool = require("../config/db");
 const { Usuario } = require("../models");
 const { Persona } = require("../models");
 const { Jugador } = require("../models");
+const bcrypt = require("bcrypt");
 
 exports.verJugadores = async (req, res) => {
   try {
-    const response = await pool.query("SELECT * FROM jugadores");
-    return res.json(response.rows);
+    const response = await Jugador.findAll();
+    return res.json(response);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error al obtener jugadores" });
@@ -18,17 +19,41 @@ exports.crearJugador = async (req, res) => {
     nombre,
     apellido,
     telefono,
-    emaill,
-    password,
+    email,
+    pass,
     fecha_nacimiento,
     posicion,
     altura,
+    frecuencia_cardiaca,
+    peso,
+    resistencia,
+    fuerza,
+    velocidad,
+    potencia,
+    equipo_id,
   } = req.body;
   try {
-    await pool.query(
-      "INSERT INTO jugadores (fecha_nacimiento, posicion, altura) VALUES ($1, $2, $3)",
-      [fecha_nacimiento, posicion, altura],
-    );
+    let password = await bcrypt.hash(pass, 10);
+    const persona = await Persona.create({ nombre, apellido, telefono });
+    const usuario = await Usuario.create({
+      email,
+      password,
+      persona_id: persona.id,
+      rol_id: 2,
+    });
+    const jugador = await Jugador.create({
+      fecha_nacimiento,
+      posicion,
+      altura,
+      frecuencia_cardiaca,
+      peso,
+      resistencia,
+      fuerza,
+      velocidad,
+      potencia,
+      equipo_id,
+    });
+
     return res.json({
       message: "Jugador creado",
       jugador: { fecha_nacimiento, posicion, altura },
@@ -54,17 +79,26 @@ exports.verJugador = async (req, res) => {
   }
 };
 
-exports.actualizarJugador = async (req, res) => {
+exports.actualizarCapacidadJugador = async (req, res) => {
   const { id } = req.params;
-  const { fecha_nacimiento, posicion, altura } = req.body;
+  const {
+    posicion,
+    altura,
+    frecuencia_cardiaca,
+    peso,
+    resistencia,
+    fuerza,
+    velocidad,
+    potencia,
+  } = req.body;
   try {
-    await pool.query(
-      "UPDATE jugadores SET fecha_nacimiento = $1, posicion = $2, altura = $3 WHERE id = $4",
-      [fecha_nacimiento, posicion, altura, id],
-    );
+    const jugador = await Jugador.findByPk(id);
+    if (!jugador)
+      return res.status(404).json({ error: "Jugador no encontrado" });
+
     return res.json({
       message: "Jugador actualizado",
-      jugador: { id, fecha_nacimiento, posicion, altura },
+      jugador: { fecha_nacimiento, posicion, altura },
     });
   } catch (error) {
     console.error(error);
