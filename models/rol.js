@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Rol.init(
     {
-      nombre: DataTypes.STRING,
+      nombre: DataTypes.ENUM("admin", "jugador", "entrenador"),
     },
     {
       sequelize,
