@@ -1,7 +1,7 @@
 const { Entrenador } = require("../models");
 const { Persona } = require("../models");
 const { Usuario } = require("../models");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const verEntrenadores = async (req, res) => {
   try {
