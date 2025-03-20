@@ -64,6 +64,69 @@ exports.crearJugador = async (req, res) => {
   }
 };
 
+exports.actualizarJugador = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nombre,
+      apellido,
+      telefono,
+      email,
+      pass,
+      fecha_nacimiento,
+      posicion,
+      altura,
+      frecuencia_cardiaca,
+      peso,
+      resistencia,
+      fuerza,
+      velocidad,
+      potencia,
+      equipo_id,
+    } = req.body;
+
+    const jugador = await Jugador.findByPk(id, {
+      include: [{ model: Usuario, include: [Persona] }]
+    });
+
+    if (!jugador) {
+      return res.status(404).json({ error: "Jugador no encontrado" });
+    }
+
+    await jugador.Usuario.Persona.update({ nombre, apellido, telefono });
+
+
+    if (email) {
+      await jugador.Usuario.update({ email });
+    }
+
+
+    if (pass) {
+      const password = await bcrypt.hash(pass, 10);
+      await jugador.Usuario.update({ password });
+    }
+
+    await jugador.update({
+      fecha_nacimiento,
+      posicion,
+      altura,
+      frecuencia_cardiaca,
+      peso,
+      resistencia,
+      fuerza,
+      velocidad,
+      potencia,
+      equipo_id,
+    });
+
+    return res.json({ message: "Jugador actualizado correctamente" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Error al actualizar jugador" });
+  }
+};
+
+
 exports.verJugador = async (req, res) => {
   const { id } = req.params;
   try {
