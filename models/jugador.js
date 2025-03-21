@@ -12,14 +12,18 @@ module.exports = (sequelize, DataTypes) => {
   Jugador.init(
     {
       fecha_nacimiento: DataTypes.DATE,
-      posicion: DataTypes.STRING,
       altura: DataTypes.SMALLINT,
-      frecuencia_cardiaca: DataTypes.SMALLINT,
-      peso: DataTypes.FLOAT, // en kg
-      resistencia: DataTypes.SMALLINT, // vo2 max en ml/kg/min
-      fuerza: DataTypes.SMALLINT, // salto vertical en cm
-      velocidad: DataTypes.SMALLINT, // km/h
-      potencia: DataTypes.SMALLINT, //potencia relativa en w/kg
+      peso: DataTypes.SMALLINT,
+      posicion: DataTypes.ENUM,
+      porcentaje_grasa_corporal:DataTypes.DOUBLE,
+      porcentaje_grasa_muscular:DataTypes.DOUBLE,
+      tipo_cuerpo:DataTypes.STRING,
+      fuerza:DataTypes.SMALLINT,
+      velocidad_max:DataTypes.SMALLINT ,
+      resistencia:DataTypes.SMALLINT ,
+      resistencia_cardiovacular:DataTypes.SMALLINT,
+      resistencia_muscular:DataTypes.SMALLINT,
+      flexibilidad: DataTypes.DOUBLE,
       equipo_id: {
         type: DataTypes.SMALLINT,
         references: {
