@@ -39,7 +39,6 @@ const crearEntrenador = async (req, res) => {
   try {
     const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
 
-    // Verificar si el correo ya está registrado
     const usuarioExistente = await Usuario.findOne({ where: { email } });
     if (usuarioExistente) {
       return res.status(400).json({ error: "El correo ya está registrado" });
@@ -47,7 +46,6 @@ const crearEntrenador = async (req, res) => {
 
     const password = await bcrypt.hash(pass, 10);
 
-    // Crear la persona, usuario y entrenador en una transacción
     const newEntrenador = await Entrenador.sequelize.transaction(async (t) => {
       const newPersona = await Persona.create(
         { nombre, apellido, telefono },
@@ -70,5 +68,6 @@ const crearEntrenador = async (req, res) => {
     res.status(500).json({ error: "Error al crear entrenador" });
   }
 };
+
 
 module.exports = { verEntrenadores, crearEntrenador, verEntrenador };
