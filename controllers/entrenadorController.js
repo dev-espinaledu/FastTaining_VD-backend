@@ -74,4 +74,39 @@ const crearEntrenador = async (req, res) => {
   }
 };
 
-module.exports = { verEntrenadores, crearEntrenador, verEntrenador };
+const actualizarEntrenador = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
+
+    const entrenador = await Entrenador.findByPk(id, {
+      include: [{ model: Usuario, include: [Persona] }]
+    });
+
+    if (!entrenador) {
+      return res.status(404).json({ error: "Entrenador no encontrado" });
+    }
+
+    await entrenador.Usuario.Persona.update({ nombre, apellido, telefono });
+
+    if (email) {
+      await entrenador.Usuario.update({ email });
+    }
+
+    if (pass) {
+      const password = await bcrypt.hash(pass, 10);
+      await entrenador.Usuario.update({ password });
+    }
+
+    if (equipo_id) {
+      await entrenador.update({ equipo_id });
+    }
+
+    res.json({ mensaje: "Entrenador actualizado correctamente" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+
+module.exports = { verEntrenadores, crearEntrenador, verEntrenador, actualizarEntrenador };

@@ -29,6 +29,32 @@ exports.crearPersona = async (req, res) => {
   }
 };
 
+exports.actualizarPersona = async (req, res) => {
+    const { id } = req.params;
+    const { nombre, apellido, telefono } = req.body;
+
+    if (!nombre || !apellido || !telefono) {
+        return res.status(400).json({ error: "Todos los campos son obligatorios" });
+    }
+
+    try {
+        const { rowCount, rows } = await pool.query(
+            "UPDATE personas SET nombre = $1, apellido = $2, telefono = $3 WHERE id = $4 RETURNING *",
+            [nombre, apellido, telefono, id]
+        );
+
+        if (rowCount === 0) {
+            return res.status(404).json({ error: "Persona no encontrada" });
+        }
+
+        res.status(200).json({ message: "Persona actualizada", persona: rows[0] });
+    } catch (error) {
+        console.error("Error al actualizar persona:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+};
+
+
 exports.verPersona = async (req, res) => {
   const { id } = req.params;
   try {
@@ -45,6 +71,7 @@ exports.verPersona = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 exports.actualizarPersona = async (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, telefono } = req.body;
@@ -67,6 +94,8 @@ exports.actualizarPersona = async (req, res) => {
   }
 };
 
+=======
+>>>>>>> cea4569ed5c983bf7ffed93ab527d2b19dd6d191
 exports.eliminarPersona = async (req, res) => {
   const { id } = req.params;
   try {

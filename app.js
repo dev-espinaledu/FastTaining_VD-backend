@@ -8,6 +8,7 @@ const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
+const calendarioRoutes = require('./routes/calendarioRoutes');
 const authRoutes = require("./routes/authRoutes");
 const sesionesRoutes = require("./routes/sesionesRoutes");
 const app = express();
@@ -32,7 +33,12 @@ app.use("/api", persona);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
+<<<<<<< HEAD
 app.use("/api", sesionesRoutes);
+=======
+app.use("/api", calendarioRoutes);
+
+>>>>>>> cea4569ed5c983bf7ffed93ab527d2b19dd6d191
 
 // Iniciar el servidor
 const PORT = process.env.PORT || 5000;
