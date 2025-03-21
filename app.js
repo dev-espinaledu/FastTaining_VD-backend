@@ -5,6 +5,7 @@ const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
+const calendarioRoutes = require('./routes/calendarioRoutes');
 const authRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 
@@ -25,6 +26,8 @@ app.use("/api", persona);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
+app.use("/api", calendarioRoutes);
+
 
 app.listen(5000, () => {
   console.log("Servidor en puerto 5000");
