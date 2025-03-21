@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "equipo",
       });
       Jugador.belongsTo(models.Persona, {
-        foreignKey: "id",
+        foreignKey: "persona_id",
         as: "persona",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
@@ -37,6 +37,16 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
         allowNull: true,
+      },
+      persona_id: { // Agregamos persona_id
+        type: DataTypes.INTEGER,
+        allowNull: true, // Opcional, depende de si un jugador siempre tiene una persona asociada
+        references: {
+          model: "personas",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       },
     },
     {

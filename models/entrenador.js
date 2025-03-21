@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "equipo", // Alias para la relación
       });
       Entrenador.belongsTo(models.Persona, {
-        foreignKey: "persona_id",
+        foreignKey: "id",
         as: "persona",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",

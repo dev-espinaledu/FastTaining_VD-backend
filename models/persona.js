@@ -16,8 +16,14 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "CASCADE",
       });
       this.hasOne(models.Jugador, {
-        foreignKey: "id",
+        foreignKey: "persona_id",
         as: "jugador",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      });
+      this.hasOne(models.Entrenador, {
+        foreignKey: "persona_id",
+        as: "entrenador",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       });

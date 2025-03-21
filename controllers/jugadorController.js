@@ -4,24 +4,51 @@ const bcrypt = require("bcryptjs");
 
 // exports.verJugadores = async (req, res) => {
 //   try {
-//     const response = await Jugador.findAll();
-//     return res.json(response);
+//     const response = await Jugador.findAll({
+//       include: [
+//         {
+//           model: Usuario,
+//           attributes: ["email"],
+//           include: [
+//             {
+//               model: Persona,
+//               attributes: ["nombre", "apellido"],
+//             },
+//           ],
+//         },
+//       ],
+//     });
+
+//     const jugadores = response.map((jugador) => ({
+//       id: jugador.id,
+//       nombre: jugador.Usuario.Persona.nombre,
+//       apellido: jugador.Usuario.Persona.apellido,
+//       email: jugador.Usuario.email,
+//       posicion: jugador.posicion,
+//       altura: jugador.altura,
+//       peso: jugador.peso,
+//     }));
+
+//     return res.json(jugadores);
 //   } catch (error) {
 //     console.error(error);
 //     return res.status(500).json({ error: "Error al obtener jugadores" });
 //   }
 // };
+
 exports.verJugadores = async (req, res) => {
   try {
     const response = await Jugador.findAll({
       include: [
         {
-          model: Usuario,
-          attributes: ["email"],
+          model: Persona, 
+          as: "persona",
+          attributes: ["nombre", "apellido"],
           include: [
             {
-              model: Persona,
-              attributes: ["nombre", "apellido"],
+              model: Usuario,
+              as: "usuario", 
+              attributes: ["email"],
             },
           ],
         },
@@ -30,9 +57,9 @@ exports.verJugadores = async (req, res) => {
 
     const jugadores = response.map((jugador) => ({
       id: jugador.id,
-      nombre: jugador.Usuario.Persona.nombre,
-      apellido: jugador.Usuario.Persona.apellido,
-      email: jugador.Usuario.email,
+      nombre: jugador.persona?.nombre || "N/A", 
+      apellido: jugador.persona?.apellido || "N/A",
+      email: jugador.persona?.usuario?.email || "N/A", 
       posicion: jugador.posicion,
       altura: jugador.altura,
       peso: jugador.peso,
@@ -40,14 +67,15 @@ exports.verJugadores = async (req, res) => {
 
     return res.json(jugadores);
   } catch (error) {
-    console.error(error);
+    console.error("Error al obtener jugadores:", error);
     return res.status(500).json({ error: "Error al obtener jugadores" });
   }
 };
 
 
+
 exports.crearJugador = async (req, res) => {
-  const t = await sequelize.transaction(); // Iniciar transacción
+  const t = await sequelize.transaction(); 
 
   try {
     const {
