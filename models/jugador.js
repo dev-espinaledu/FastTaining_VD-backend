@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       fecha_nacimiento: DataTypes.DATE,
       altura: DataTypes.SMALLINT,
       peso: DataTypes.SMALLINT,
-      posicion: DataTypes.ENUM,
+      posicion: DataTypes.ENUM("delantero", "mediocampista", "defensa", "arquero"),
       porcentaje_grasa_corporal:DataTypes.DOUBLE,
       porcentaje_grasa_muscular:DataTypes.DOUBLE,
       tipo_cuerpo:DataTypes.STRING,
