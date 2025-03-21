@@ -33,12 +33,8 @@ app.use("/api", persona);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
-<<<<<<< HEAD
-app.use("/api", sesionesRoutes);
-=======
 app.use("/api", calendarioRoutes);
 
->>>>>>> cea4569ed5c983bf7ffed93ab527d2b19dd6d191
 
 // Iniciar el servidor
 const PORT = process.env.PORT || 5000;
