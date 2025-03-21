@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const { Entrenamiento, Jugador } = require("../models");
 const openai = require("openai");
 

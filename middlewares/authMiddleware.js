@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
-    req.user = decoded; 
+    req.user = decoded;
     next();
   } catch (error) {
     return res.status(401).json({ message: "Token inválido o expirado" });
@@ -26,6 +26,11 @@ const verificarAdmin = (req, res, next) => {
   next();
 };
 
-console.log("Exportando middlewares:", { authMiddleware, verificarAdmin });
+const verificarEntrenador = (req, res, next) => {
+  if (!req.user || req.user.role !== "entrenador") {
+    return res.status(403).json({ message: "Acceso denegado. Se requieren permisos de entrenador." });
+  }
+  next();
+};
 
-module.exports = { authMiddleware, verificarAdmin };
+module.exports = { authMiddleware, verificarAdmin, verificarEntrenador };

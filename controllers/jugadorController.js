@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 const { Persona, Usuario, Jugador, sequelize } = require("../models");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 exports.verJugadores = async (req, res) => {
   try {
