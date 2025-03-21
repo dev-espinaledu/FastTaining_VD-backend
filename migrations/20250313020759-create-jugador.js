@@ -24,7 +24,7 @@ module.exports = {
       porcentaje_grasa_corporal: {
         type: Sequelize.DOUBLE,
       },
-      porcentaje_grasa_muscular: {
+      porcentaje_masa_muscular: {
         type: Sequelize.DOUBLE,
       },
       tipo_cuerpo: {
