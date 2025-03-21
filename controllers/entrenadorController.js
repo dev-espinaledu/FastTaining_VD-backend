@@ -1,4 +1,4 @@
-const { Entrenador, Persona, Usuario } = require("../models");
+const { Entrenador, Persona, Usuario, sequelize } = require("../models"); // Agregar sequelize para transacciones
 const bcrypt = require("bcrypt");
 
 const verEntrenadores = async (req, res) => {
@@ -36,34 +36,40 @@ const verEntrenador = async (req, res) => {
 };
 
 const crearEntrenador = async (req, res) => {
+  const t = await sequelize.transaction(); // Iniciar la transacción
+
   try {
     const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
 
     const usuarioExistente = await Usuario.findOne({ where: { email } });
     if (usuarioExistente) {
+      await t.rollback(); // Revertir si ya existe
       return res.status(400).json({ error: "El correo ya está registrado" });
     }
 
     const password = await bcrypt.hash(pass, 10);
 
-    const newEntrenador = await Entrenador.sequelize.transaction(async (t) => {
-      const newPersona = await Persona.create(
-        { nombre, apellido, telefono },
-        { transaction: t },
-      );
+    // Crear registros dentro de la transacción
+    const newPersona = await Persona.create(
+      { nombre, apellido, telefono },
+      { transaction: t },
+    );
 
-      const newUsuario = await Usuario.create(
-        { email, password, persona_id: newPersona.id, rol_id: 2 },
-        { transaction: t },
-      );
-      return await Entrenador.create(
-        { persona_id: newPersona.id, equipo_id },
-        { transaction: t },
-      );
-    });
+    const newUsuario = await Usuario.create(
+      { email, password, persona_id: newPersona.id, rol_id: 2 },
+      { transaction: t },
+    );
+
+    const newEntrenador = await Entrenador.create(
+      { persona_id: newPersona.id, equipo_id },
+      { transaction: t },
+    );
+
+    await t.commit(); // Confirmar transacción
 
     res.status(201).json({ entrenador: newEntrenador });
   } catch (e) {
+    await t.rollback(); // Revertir en caso de error
     res.status(500).json({ error: "Error al crear entrenador" });
   }
 };

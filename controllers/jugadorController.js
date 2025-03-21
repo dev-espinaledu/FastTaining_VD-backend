@@ -1,16 +1,50 @@
 const pool = require("../config/db");
 const { Persona, Usuario, Jugador, sequelize } = require("../models");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
+// exports.verJugadores = async (req, res) => {
+//   try {
+//     const response = await Jugador.findAll();
+//     return res.json(response);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Error al obtener jugadores" });
+//   }
+// };
 exports.verJugadores = async (req, res) => {
   try {
-    const response = await Jugador.findAll();
-    return res.json(response);
+    const response = await Jugador.findAll({
+      include: [
+        {
+          model: Usuario,
+          attributes: ["email"],
+          include: [
+            {
+              model: Persona,
+              attributes: ["nombre", "apellido"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const jugadores = response.map((jugador) => ({
+      id: jugador.id,
+      nombre: jugador.Usuario.Persona.nombre,
+      apellido: jugador.Usuario.Persona.apellido,
+      email: jugador.Usuario.email,
+      posicion: jugador.posicion,
+      altura: jugador.altura,
+      peso: jugador.peso,
+    }));
+
+    return res.json(jugadores);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error al obtener jugadores" });
   }
 };
+
 
 exports.crearJugador = async (req, res) => {
   const t = await sequelize.transaction(); // Iniciar transacción
