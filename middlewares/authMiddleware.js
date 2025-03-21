@@ -26,6 +26,11 @@ const verificarAdmin = (req, res, next) => {
   next();
 };
 
-console.log("Exportando middlewares:", { authMiddleware, verificarAdmin });
+const verificarEntrenador = (req, res, next) => {
+  if (!req.user || req.user.role !== "entrenador") {
+    return res.status(403).json({ message: "Acceso denegado. Se requieren permisos de entrenador." });
+  }
+  next();
+};
 
-module.exports = { authMiddleware, verificarAdmin };
+module.exports = { authMiddleware, verificarAdmin, verificarEntrenador };
