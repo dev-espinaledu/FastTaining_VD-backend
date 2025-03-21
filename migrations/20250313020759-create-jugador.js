@@ -12,11 +12,41 @@ module.exports = {
       fecha_nacimiento: {
         type: Sequelize.DATE,
       },
-      posicion: {
-        type: Sequelize.STRING,
-      },
       altura: {
         type: Sequelize.SMALLINT,
+      },
+      peso: {
+        type: Sequelize.STRING,
+      },
+      posicion: {
+        type: Sequelize.ENUM("delantero", "mediocampista", "defensa", "arquero"),
+      },
+      porcentaje_grasa_corporal: {
+        type: Sequelize.DOUBLE,
+      },
+      porcentaje_grasa_muscular: {
+        type: Sequelize.DOUBLE,
+      },
+      tipo_cuerpo: {
+        type: Sequelize.STRING,
+      },
+      fuerza: {
+        type: Sequelize.SMALLINT,
+      },
+      velocidad_max: {
+        type: Sequelize.SMALLINT,
+      },
+      resistencia: {
+        type: Sequelize.SMALLINT,
+      },
+      resistencia_cardiovascular: {
+        type: Sequelize.SMALLINT,
+      },
+      resistencia_muscular: {
+        type: Sequelize.SMALLINT,
+      },
+      flexibilidad: {
+        type: Sequelize.DOUBLE,
       },
       createdAt: {
         allowNull: false,

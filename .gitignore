@@ -1,1 +1,4 @@
-node_modules
+/node_modules/
+
+*.log      # Ignora todos los archivos .log
+*.tmp      # Ignora todos los archivos .tmp
