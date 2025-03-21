@@ -1,6 +1,4 @@
-
 /node_modules/
-.env
+
 *.log      # Ignora todos los archivos .log
 *.tmp      # Ignora todos los archivos .tmp
-node_modules

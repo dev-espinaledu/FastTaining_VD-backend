@@ -19,12 +19,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       posicion: {
-        type: Sequelize.ENUM(
-          "delantero",
-          "mediocampista",
-          "defensa",
-          "arquero",
-        ),
+        type: Sequelize.ENUM("delantero", "mediocampista", "defensa", "arquero"),
       },
       porcentaje_grasa_corporal: {
         type: Sequelize.DOUBLE,

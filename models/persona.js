@@ -15,6 +15,12 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE", // Si se elimina la persona, el usuario asociado también se elimina
         onUpdate: "CASCADE",
       });
+      this.hasOne(models.Jugador, {
+        foreignKey: "id",
+        as: "jugador",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      });
     }
   }
   Persona.init(

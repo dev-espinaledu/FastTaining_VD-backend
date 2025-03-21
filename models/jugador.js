@@ -7,6 +7,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "equipo_id",
         as: "equipo",
       });
+      Jugador.belongsTo(models.Persona, {
+        foreignKey: "id",
+        as: "persona",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      });
     }
   }
   Jugador.init(
@@ -14,15 +20,15 @@ module.exports = (sequelize, DataTypes) => {
       fecha_nacimiento: DataTypes.DATE,
       altura: DataTypes.SMALLINT,
       peso: DataTypes.SMALLINT,
-      posicion: DataTypes.ENUM("arquero, defensa, mediocampista, delantero"),
-      porcentaje_grasa_corporal: DataTypes.DOUBLE,
-      porcentaje_masa_muscular: DataTypes.DOUBLE,
-      tipo_cuerpo: DataTypes.STRING,
-      fuerza: DataTypes.SMALLINT,
-      velocidad_max: DataTypes.SMALLINT,
-      resistencia: DataTypes.SMALLINT,
-      resistencia_cardiovascular: DataTypes.SMALLINT,
-      resistencia_muscular: DataTypes.SMALLINT,
+      posicion: DataTypes.ENUM("delantero", "mediocampista", "defensa", "arquero"),
+      porcentaje_grasa_corporal:DataTypes.DOUBLE,
+      porcentaje_masa_muscular:DataTypes.DOUBLE,
+      tipo_cuerpo:DataTypes.STRING,
+      fuerza:DataTypes.SMALLINT,
+      velocidad_max:DataTypes.SMALLINT ,
+      resistencia:DataTypes.SMALLINT ,
+      resistencia_cardiovascular:DataTypes.SMALLINT,
+      resistencia_muscular:DataTypes.SMALLINT,
       flexibilidad: DataTypes.DOUBLE,
       equipo_id: {
         type: DataTypes.SMALLINT,
