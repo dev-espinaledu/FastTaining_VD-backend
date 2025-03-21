@@ -10,7 +10,6 @@ const entrenadorRoutes = require("./routes/entrenadorRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
 const sesionesRoutes = require("./routes/sesionesRoutes");
-
 const app = express();
 
 // Middleware para parsear JSON

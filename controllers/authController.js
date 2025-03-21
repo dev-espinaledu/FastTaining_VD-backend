@@ -1,5 +1,5 @@
 const { Usuario } = require("../models");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
@@ -30,13 +30,13 @@ const login = async (req, res) => {
     }
 
     const user = await Usuario.findOne({ where: { email } });
-    
+
     if (!user) {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
-    
+
     if (!passwordMatch) {
       // Registrar intento fallido
       if (!intentosFallidos[email]) {
