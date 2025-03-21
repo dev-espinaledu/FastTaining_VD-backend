@@ -5,30 +5,34 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-let intentosFallidos = {}; // Objeto para rastrear intentos fallidos
+let intentosFallidos = {}; // Rastreo de intentos fallidos
 
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validación de email y contraseña
     if (!email || !password) {
       return res.status(400).json({ message: "Correo y contraseña son obligatorios" });
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "Correo inválido" });
+    }
 
-    // Bloqueo si hay más de 5 intentos en 15 minutos
+    // Verificar si el usuario ha excedido intentos fallidos
     if (intentosFallidos[email] && intentosFallidos[email].intentos >= 5) {
       const tiempoBloqueo = (Date.now() - intentosFallidos[email].primerIntento) / 1000 / 60;
       if (tiempoBloqueo < 15) {
         return res.status(403).json({ message: "Demasiados intentos fallidos. Intenta más tarde." });
       } else {
-        delete intentosFallidos[email]; // Restablecer intentos
+        delete intentosFallidos[email]; // Restablecer intentos fallidos
       }
     }
 
     const user = await Usuario.findOne({ where: { email } });
-
+    
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -40,13 +44,13 @@ const login = async (req, res) => {
       } else {
         intentosFallidos[email].intentos++;
       }
-      return res.status(401).json({ message: "Contraseña incorrecta" });
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    // Si el login es exitoso, restablecer intentos fallidos
+    // Restablecer intentos fallidos tras un inicio de sesión exitoso
     delete intentosFallidos[email];
 
-    // Generar token con información del usuario
+    // Generar token JWT
     const token = jwt.sign(
       { userId: user.id, role: user.rol_id },
       process.env.JWT_SECRET,
@@ -55,6 +59,7 @@ const login = async (req, res) => {
 
     res.json({ message: "Login exitoso", token, role: user.rol_id });
   } catch (error) {
+    console.error("Error en /auth/login:", error);
     res.status(500).json({ message: "Error en el servidor" });
   }
 };
