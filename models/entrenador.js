@@ -8,11 +8,18 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file llamará automáticamente a este método.
      */
+    
     static associate(models) {
       // Un Entrenador pertenece a un solo Equipo
       Entrenador.belongsTo(models.Equipo, {
         foreignKey: "equipo_id",
         as: "equipo", // Alias para la relación
+      });
+      Entrenador.belongsTo(models.Persona, {
+        foreignKey: "persona_id",
+        as: "persona",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       });
     }
   }

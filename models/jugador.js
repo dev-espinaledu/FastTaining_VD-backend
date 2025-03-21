@@ -7,6 +7,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "equipo_id",
         as: "equipo",
       });
+      Jugador.belongsTo(models.Persona, {
+        foreignKey: "id",
+        as: "persona",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      });
     }
   }
   Jugador.init(
