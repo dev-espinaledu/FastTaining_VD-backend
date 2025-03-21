@@ -1,9 +1,9 @@
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
-export const authMiddleware = (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
 
   if (!token) {
@@ -22,9 +22,11 @@ export const authMiddleware = (req, res, next) => {
 };
 
 // Middleware para verificar si el usuario es entrenador
-export const verificarEntrenador = (req, res, next) => {
+const verificarEntrenador = (req, res, next) => {
   if (req.user.role !== "entrenador") {
     return res.status(403).json({ message: "Acceso denegado" });
   }
   next();
 };
+
+module.exports = { authMiddleware, verificarEntrenador };
