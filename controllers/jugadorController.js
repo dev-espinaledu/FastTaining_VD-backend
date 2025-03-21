@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const { Usuario } = require("../models");
 const { Persona } = require("../models");
 const { Jugador } = require("../models");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 exports.verJugadores = async (req, res) => {
   try {
