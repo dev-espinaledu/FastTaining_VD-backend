@@ -9,41 +9,57 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.SMALLINT,
       },
+      usuario_id:{
+        type:Sequelize.SMALLINT,
+        allowNull: false,
+        references:{model:"usuarios", key:"id"},
+      },
+      equipo_id:{
+        type:Sequelize.SMALLINT,
+        allowNull: false,
+        references:{model:"equipos", key:"id"},        
+      },
       fecha_nacimiento: {
         type: Sequelize.DATE,
       },
       altura: {
         type: Sequelize.SMALLINT,
+        allowNull:true
       },
       peso: {
         type: Sequelize.STRING,
+        allowNull:true
       },
       posicion: {
         type: Sequelize.ENUM("delantero", "mediocampista", "defensa", "arquero"),
       },
       porcentaje_grasa_corporal: {
         type: Sequelize.DOUBLE,
+        allowNull:true
       },
-      porcentaje_grasa_muscular: {
+      porcentaje_masa_muscular: {
         type: Sequelize.DOUBLE,
-      },
+        allowNull:true
+      }, 
       tipo_cuerpo: {
         type: Sequelize.STRING,
+        allowNull:true
       },
       fuerza: {
         type: Sequelize.SMALLINT,
+        allowNull:true
       },
       velocidad_max: {
         type: Sequelize.SMALLINT,
-      },
-      resistencia: {
-        type: Sequelize.SMALLINT,
+        allowNull:true
       },
       resistencia_cardiovascular: {
         type: Sequelize.SMALLINT,
+        allowNull:true
       },
       resistencia_muscular: {
         type: Sequelize.SMALLINT,
+        allowNull:true
       },
       flexibilidad: {
         type: Sequelize.DOUBLE,

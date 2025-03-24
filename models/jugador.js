@@ -5,33 +5,42 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Jugador.belongsTo(models.Equipo, {
         foreignKey: "equipo_id",
-        as: "equipo",
+        as: "equipos",
+      });
+      Jugador.belongsTo(models.Usuario, {
+        foreignKey: "usuario_id",
+        as: "usuarios",
+        onUpdate: CASCADE
+      });
+      Jugador.hasMany(models.Historial,{
+        foreignKey: "jugador_id",
+        as:"historial_datos",
+      });
+
+      Jugador.hasMany(models.DatoSesion,{
+        foreignKey: "jugador_id",
+        as:"datos_sesion",
+        onUpdate: CASCADE
       });
     }
   }
   Jugador.init(
     {
+      usuario_id:DataTypes.SMALLINT,
+      equipo_id: DataTypes.SMALLINT,
       fecha_nacimiento: DataTypes.DATE,
       altura: DataTypes.SMALLINT,
       peso: DataTypes.SMALLINT,
       posicion: DataTypes.ENUM("delantero", "mediocampista", "defensa", "arquero"),
       porcentaje_grasa_corporal:DataTypes.DOUBLE,
-      porcentaje_grasa_muscular:DataTypes.DOUBLE,
+      porcentaje_masa_muscular:DataTypes.DOUBLE,
       tipo_cuerpo:DataTypes.STRING,
       fuerza:DataTypes.SMALLINT,
-      velocidad_max:DataTypes.SMALLINT ,
-      resistencia:DataTypes.SMALLINT ,
-      resistencia_cardiovacular:DataTypes.SMALLINT,
-      resistencia_muscular:DataTypes.SMALLINT,
+      velocidad_max:DataTypes.SMALLINT,
+      resistencia_aerobica:DataTypes.SMALLINT,
+      resistencia_anaerobica:DataTypes.SMALLINT,
       flexibilidad: DataTypes.DOUBLE,
-      equipo_id: {
-        type: DataTypes.SMALLINT,
-        references: {
-          model: "equipos",
-          key: "id",
-        },
-        allowNull: true,
-      },
+      
     },
     {
       sequelize,

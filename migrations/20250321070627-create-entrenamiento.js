@@ -9,24 +9,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.SMALLINT
       },
-      id_jugador:{
-        type: Sequelize.SMALLINT,
-        allowNull: false,
-        references: {
-          model: "jugadores",
-          key: "id",
-        },
-      },
-      fase_inicial: {
-        type: Sequelize.STRING
-      },
-      fase_central: {
-        type: Sequelize.STRING
-      },
-      fase_final: {
-        type: Sequelize.SMALLINT
-      },
-      id_datos_sesion:{
+      datos_sesion_id:{
         type: Sequelize.SMALLINT,
         allowNull: false,
         references: {
@@ -34,6 +17,16 @@ module.exports = {
           key: "id",
         },
       },
+      fase_inicial: {
+        type: Sequelize.JSONB
+      },
+      fase_central: {
+        type: Sequelize.JSONB
+      },
+      fase_final: {
+        type: Sequelize.JSONB
+      },
+      
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

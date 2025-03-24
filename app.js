@@ -5,9 +5,6 @@ const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
 
-const datosSesion = require("./routes/datosEntrenamientoRoutes");
-const entrenamiento = require("./routes/entrenamientoRoutes");
-
 
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -30,9 +27,6 @@ app.use("/api", persona);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
-
-app.use("/api", entrenamiento);
-app.use("/api", datosSesion);
 
 
 app.listen(5000, () => {
