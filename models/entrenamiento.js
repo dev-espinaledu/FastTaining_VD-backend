@@ -5,22 +5,17 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Entrenamiento extends Model {
     static associate(models) {
-      Entrenamiento.hasMany(models.Jugador, {
-        foreignKey: "id_jugador",
-        as: "Jugadores",
-      });
-      Entrenamiento.hasMany(models.DatoSesion, {
-        foreignKey: "id_datos_sesion",
+      Entrenamiento.belongsTo(models.DatoSesion, {
+        foreignKey: "datos_sesion_id",
         as: "datos_sesion",
       });
     }
   }
   Entrenamiento.init({
-    id_jugador: DataTypes.SMALLINT,
+    datos_sesion_id: DataTypes.SMALLINT,
     fase_inicial: DataTypes.JSONB,
     fase_central: DataTypes.JSONB,
     fase_final: DataTypes.JSONB,
-    id_datos_sesion: DataTypes.SMALLINT,
 
 
   }, {

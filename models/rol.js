@@ -1,20 +1,22 @@
-"use strict";
+//En revisión 
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Rol extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // Relación 1 a 1 con Usuario
+      
       this.hasOne(models.Usuario, {
         foreignKey: "rol_id",
-        as: "usuario",
+        as: "usuarios",
         onDelete: "SET NULL", // Si se elimina el rol, el usuario mantiene la clave nula
         onUpdate: "CASCADE",
       });
+
+      this.belongsToMany(models.Permiso,{
+        through: "roles_permisos",
+        foreignKey:"rol_id",
+        otherKey:" permiso_id",
+        as:"permisos"
+      }); 
     }
   }
   Rol.init(

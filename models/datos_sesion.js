@@ -6,19 +6,19 @@ module.exports = (sequelize, DataTypes) => {
   class DatoSesion extends Model {
     static associate(models) {
       DatoSesion.belongsTo(models.Jugador, {
-        foreignKey: "id_jugador",
-        as: "Jugadores",
+        foreignKey: "jugador_id",
+        as: "jugadores",
       });
-      DatoSesion.hasMany(models.Entrenamiento, {
-        foreignKey: "id_datos_sesion",
-        as: "datos_sesion",
+      DatoSesion.hasOne(models.Entrenamiento, {
+        foreignKey: "datos_sesion_id",
+        as: "entrenamiento",
       });
     }
   }
   DatoSesion.init({
     fecha: DataTypes.DATE,
     objetivo: DataTypes.STRING,
-    id_jugador: DataTypes.SMALLINT
+    jugador_id: DataTypes.SMALLINT
   }, {
     sequelize,
     modelName: 'DatoSesion',
