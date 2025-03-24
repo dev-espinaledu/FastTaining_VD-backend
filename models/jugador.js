@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
       Jugador.belongsTo(models.Usuario, {
         foreignKey: "usuario_id",
         as: "usuarios",
-        onUpdate: CASCADE
       });
       Jugador.hasMany(models.Historial,{
         foreignKey: "jugador_id",
@@ -20,7 +19,6 @@ module.exports = (sequelize, DataTypes) => {
       Jugador.hasMany(models.DatoSesion,{
         foreignKey: "jugador_id",
         as:"datos_sesion",
-        onUpdate: CASCADE
       });
     }
   }

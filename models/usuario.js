@@ -11,15 +11,16 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "rol_id",
                 as: "roles",
             });
-            Jugador.hasOne(models.Entrenador, {
+            Usuario.hasOne(models.Entrenador, {
                 foreignKey: "usuario_id",
                 as: "entrenadores",
             });
-            Jugador.hasOne(models.Jugador, {
+            
+            Usuario.hasOne(models.Jugador, {
                 foreignKey: "usuario_id",
                 as: "jugadores",
             });
-            Jugador.hasOne(models.Administrador, {
+            Usuario.hasOne(models.Administrador, {
                 foreignKey: "usuario_id",
                 as: "administradores",
             });
