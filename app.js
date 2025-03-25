@@ -7,6 +7,11 @@ const jugadores = require("./routes/jugadorRoutes");
 const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
+
+const datosSesion = require("./routes/datosEntrenamientoRoutes");
+const entrenamiento = require("./routes/entrenamientoRoutes");
+
+
 const equipoRoutes = require("./routes/equipoRoutes");
 const calendarioRoutes = require('./routes/calendarioRoutes');
 const authRoutes = require("./routes/authRoutes");
@@ -34,7 +39,8 @@ app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
 app.use("/api", calendarioRoutes);
-
+app.use("/api", entrenamiento);
+app.use("/api", datosSesion);
 
 // Iniciar el servidor
 const PORT = process.env.PORT || 5000;

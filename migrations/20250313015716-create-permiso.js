@@ -2,21 +2,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('ejercicios', {
+    await queryInterface.createTable('permisos', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.SMALLINT
       },
-      ejercicio: {
-        type: Sequelize.STRING
+      nombre: {
+        type: Sequelize.STRING,
+        allowNull: false
       },
-      repeticiones: {
-        type: Sequelize.STRING
-      },
-      series: {
-        type: Sequelize.STRING
+      descripcion: {
+        type: Sequelize.STRING,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -29,6 +28,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('ejercicios');
+    await queryInterface.dropTable('permisos');
   }
 };

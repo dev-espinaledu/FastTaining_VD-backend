@@ -5,7 +5,20 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Jugador.belongsTo(models.Equipo, {
         foreignKey: "equipo_id",
-        as: "equipo",
+        as: "equipos",
+      });
+      Jugador.belongsTo(models.Usuario, {
+        foreignKey: "usuario_id",
+        as: "usuarios",
+      });
+      Jugador.hasMany(models.Historial,{
+        foreignKey: "jugador_id",
+        as:"historial_datos",
+      });
+
+      Jugador.hasMany(models.DatoSesion,{
+        foreignKey: "jugador_id",
+        as:"datos_sesion",
       });
       Jugador.belongsTo(models.Persona, {
         foreignKey: "id",
@@ -17,6 +30,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Jugador.init(
     {
+      usuario_id:DataTypes.SMALLINT,
+      equipo_id: DataTypes.SMALLINT,
       fecha_nacimiento: DataTypes.DATE,
       altura: DataTypes.SMALLINT,
       peso: DataTypes.SMALLINT,
@@ -25,19 +40,10 @@ module.exports = (sequelize, DataTypes) => {
       porcentaje_masa_muscular:DataTypes.DOUBLE,
       tipo_cuerpo:DataTypes.STRING,
       fuerza:DataTypes.SMALLINT,
-      velocidad_max:DataTypes.SMALLINT ,
-      resistencia:DataTypes.SMALLINT ,
-      resistencia_cardiovascular:DataTypes.SMALLINT,
-      resistencia_muscular:DataTypes.SMALLINT,
+      velocidad_max:DataTypes.SMALLINT,
+      resistencia_aerobica:DataTypes.SMALLINT,
+      resistencia_anaerobica:DataTypes.SMALLINT,
       flexibilidad: DataTypes.DOUBLE,
-      equipo_id: {
-        type: DataTypes.SMALLINT,
-        references: {
-          model: "equipos",
-          key: "id",
-        },
-        allowNull: true,
-      },
     },
     {
       sequelize,

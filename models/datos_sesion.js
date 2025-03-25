@@ -3,23 +3,26 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class datos_sesion extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class DatoSesion extends Model {
     static associate(models) {
-      // define association here
+      DatoSesion.belongsTo(models.Jugador, {
+        foreignKey: "jugador_id",
+        as: "jugadores",
+      });
+      DatoSesion.hasOne(models.Entrenamiento, {
+        foreignKey: "datos_sesion_id",
+        as: "entrenamiento",
+      });
     }
   }
-  datos_sesion.init({
+  DatoSesion.init({
     fecha: DataTypes.DATE,
     objetivo: DataTypes.STRING,
-    id_jugador: DataTypes.SMALLINT
+    jugador_id: DataTypes.SMALLINT
   }, {
     sequelize,
-    modelName: 'datos_sesion',
+    modelName: 'DatoSesion',
+    tableName: 'datos_sesion'
   });
-  return datos_sesion;
+  return DatoSesion;
 };

@@ -49,30 +49,26 @@ exports.verJugadores = async (req, res) => {
 exports.crearJugador = async (req, res) => {
   const t = await sequelize.transaction(); // Iniciar transacción
 
+  const {
+    nombre,
+    telefono,
+    email,
+    pass,
+    fecha_nacimiento,
+    altura,
+    peso,
+    posicion,
+    porcentaje_grasa_corporal,
+    porcentaje_masa_muscular,
+    tipo_cuerpo,
+    fuerza,
+    velocidad_max,
+    resistencia_aerobica,
+    resistencia_anaerobica,
+    flexibilidad,
+    equipo_id
+  } = req.body;
   try {
-    const {
-      nombre,
-      apellido,
-      telefono,
-      email,
-      pass,
-      fecha_nacimiento,
-      altura,
-      peso,
-      posicion,
-      porcentaje_grasa_corporal,
-      porcentaje_masa_muscular,
-      tipo_cuerpo,
-      fuerza,
-      velocidad_max,
-      frecuencia_cardiaca,
-      resistencia,
-      resistencia_cardiovascular,
-      resistencia_muscular,
-      flexibilidad,
-      equipo_id,
-    } = req.body;
-
     // Validaciones básicas
     if (
       !nombre ||
