@@ -69,4 +69,13 @@ const generarEntrenamiento = async (req, res) => {
   }
 };
 
-module.exports = { generarEntrenamiento };
+const obtenerSesiones = async (req, res) => {
+  try {
+    const sesiones = await Entrenamiento.findAll();
+    return res.status(200).json(sesiones);
+  } catch (error) {
+    console.error("Error al obtener sesiones:", error);
+    return res.status(500).json({ error: "Error al obtener sesiones" });
+  }
+};
+module.exports = { generarEntrenamiento, obtenerSesiones };
