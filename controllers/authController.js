@@ -1,4 +1,4 @@
-const { Usuario } = require("../models");
+const { Usuario, Rol } = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -19,26 +19,25 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Correo inválido" });
     }
 
-    // Verificar si el usuario ha excedido intentos fallidos
+    // Bloqueo por intentos fallidos
     if (intentosFallidos[email] && intentosFallidos[email].intentos >= 5) {
       const tiempoBloqueo = (Date.now() - intentosFallidos[email].primerIntento) / 1000 / 60;
       if (tiempoBloqueo < 15) {
         return res.status(403).json({ message: "Demasiados intentos fallidos. Intenta más tarde." });
       } else {
-        delete intentosFallidos[email]; // Restablecer intentos fallidos
+        delete intentosFallidos[email];
       }
     }
 
+    // Buscar usuario
     const user = await Usuario.findOne({ where: { email } });
-
     if (!user) {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
+    // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
-
     if (!passwordMatch) {
-      // Registrar intento fallido
       if (!intentosFallidos[email]) {
         intentosFallidos[email] = { intentos: 1, primerIntento: Date.now() };
       } else {
@@ -47,17 +46,27 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    // Restablecer intentos fallidos tras un inicio de sesión exitoso
+    // Restablecer intentos fallidos
     delete intentosFallidos[email];
 
+    // Obtener el rol del usuario
+    const rol = await Rol.findByPk(user.rol_id);
+    if (!rol) {
+      return res.status(500).json({ message: "Error: Rol no encontrado" });
+    }
+
     // Generar token JWT
+    if (!process.env.JWT_SECRET) {
+      throw new Error("Falta la variable de entorno JWT_SECRET en .env");
+    }
+
     const token = jwt.sign(
-      { userId: user.id, role: user.rol_id },
+      { userId: user.id, role: rol.nombre }, // Usa rol.id si prefieres
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login exitoso", token, role: user.rol_id });
+    res.json({ message: "Login exitoso", token, role: rol.nombre });
   } catch (error) {
     console.error("Error en /auth/login:", error);
     res.status(500).json({ message: "Error en el servidor" });
