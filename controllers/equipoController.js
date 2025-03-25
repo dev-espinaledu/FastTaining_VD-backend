@@ -25,10 +25,11 @@ const verEquipo = async (req, res) => {
 
 const crearEquipo = async (req, res) => {
   try {
-    const { nombre, escudo_url } = req.body;
+    const { nombre, escudo_url, descripcion } = req.body;
     const nuevoEquipo = await Equipo.create({
       nombre,
       escudo_url,
+      descripcion
     });
 
     res.json({ equipo: nuevoEquipo });

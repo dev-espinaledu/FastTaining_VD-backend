@@ -53,11 +53,11 @@ module.exports = {
         type: Sequelize.SMALLINT,
         allowNull:true
       },
-      resistencia_cardiovascular: {
+      resistencia_aerobica: {
         type: Sequelize.SMALLINT,
         allowNull:true
       },
-      resistencia_muscular: {
+      resistencia_anaerobica: {
         type: Sequelize.SMALLINT,
         allowNull:true
       },

@@ -2,7 +2,7 @@ const { DatoSesion } = require("../models");
 
 const TomarDatosEntrenamiento = async (req, res) => {
   try {
-    const { fecha, objetivo, id_jugador } = req.body;
+    const { fecha, objetivo, jugador_id } = req.body;
     const nuevaSesion = await DatoSesion.create({
       fecha,
       objetivo,

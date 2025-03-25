@@ -37,7 +37,13 @@ const verEntrenador = async (req, res) => {
 
 const crearEntrenador = async (req, res) => {
   try {
-    const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
+    const {
+      nombre, 
+      apellido,
+      email,
+      pass,
+      telefono,
+      equipo_id } = req.body;
 
     const usuarioExistente = await Usuario.findOne({ where: { email } });
     if (usuarioExistente) {
@@ -45,21 +51,16 @@ const crearEntrenador = async (req, res) => {
     }
 
     const password = await bcrypt.hash(pass, 10);
-
-    const newEntrenador = await Entrenador.sequelize.transaction(async (t) => {
-      const newPersona = await Persona.create(
-        { nombre, apellido, telefono },
-        { transaction: t },
-      );
-
-      const newUsuario = await Usuario.create(
-        { email, password, persona_id: newPersona.id, rol_id: 2 },
-        { transaction: t },
-      );
-      return await Entrenador.create(
-        { persona_id: newPersona.id, equipo_id },
-        { transaction: t },
-      );
+    const newPersona = await Persona.create({ nombre, apellido, telefono });
+    const newUsuario = await Usuario.create({
+      email,
+      password,
+      persona_id: newPersona.id,
+      rol_id: 3,
+    });
+    const newEntrenador = await Entrenador.create({
+      usuario_id:newUsuario.id,
+      equipo_id,
     });
 
     res.status(201).json({ entrenador: newEntrenador });
