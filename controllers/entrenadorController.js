@@ -61,7 +61,7 @@ const crearEntrenador = async (req, res) => {
     );
 
     const newEntrenador = await Entrenador.create(
-      { persona_id: newPersona.id, equipo_id },
+      { usuario_id: newUsuario.id, equipo_id },
       { transaction: t },
     );
 
@@ -80,7 +80,7 @@ const actualizarEntrenador = async (req, res) => {
     const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
 
     const entrenador = await Entrenador.findByPk(id, {
-      include: [{ model: Usuario, include: [Persona] }]
+      include: [{ model: Usuario, include: [Persona] }],
     });
 
     if (!entrenador) {
@@ -108,5 +108,9 @@ const actualizarEntrenador = async (req, res) => {
   }
 };
 
-
-module.exports = { verEntrenadores, crearEntrenador, verEntrenador, actualizarEntrenador };
+module.exports = {
+  verEntrenadores,
+  crearEntrenador,
+  verEntrenador,
+  actualizarEntrenador,
+};

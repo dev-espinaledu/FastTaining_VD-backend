@@ -45,15 +45,16 @@ exports.verJugadores = async (req, res) => {
   }
 };
 
-
 exports.crearJugador = async (req, res) => {
   const t = await sequelize.transaction(); // Iniciar transacción
 
   const {
     nombre,
+    apellido,
     telefono,
     email,
     pass,
+    equipo_id,
     fecha_nacimiento,
     altura,
     peso,
@@ -66,7 +67,6 @@ exports.crearJugador = async (req, res) => {
     resistencia_aerobica,
     resistencia_anaerobica,
     flexibilidad,
-    equipo_id
   } = req.body;
   try {
     // Validaciones básicas
@@ -119,10 +119,8 @@ exports.crearJugador = async (req, res) => {
         tipo_cuerpo,
         fuerza,
         velocidad_max,
-        frecuencia_cardiaca,
-        resistencia,
-        resistencia_cardiovascular,
-        resistencia_muscular,
+        resistencia_aerobica,
+        resistencia_anaerobica,
         flexibilidad,
         equipo_id,
         usuario_id: usuario.id, // Asociar con el usuario recién creado
@@ -174,7 +172,7 @@ exports.actualizarJugador = async (req, res) => {
     } = req.body;
 
     const jugador = await Jugador.findByPk(id, {
-      include: [{ model: Usuario, include: [Persona] }]
+      include: [{ model: Usuario, include: [Persona] }],
     });
 
     if (!jugador) {
@@ -183,11 +181,9 @@ exports.actualizarJugador = async (req, res) => {
 
     await jugador.Usuario.Persona.update({ nombre, apellido, telefono });
 
-
     if (email) {
       await jugador.Usuario.update({ email });
     }
-
 
     if (pass) {
       const password = await bcrypt.hash(pass, 10);
@@ -205,6 +201,18 @@ exports.actualizarJugador = async (req, res) => {
       velocidad,
       potencia,
       equipo_id,
+      fecha_nacimiento,
+      altura,
+      peso,
+      posicion,
+      porcentaje_grasa_corporal,
+      porcentaje_masa_muscular,
+      tipo_cuerpo,
+      fuerza,
+      velocidad_max,
+      resistencia_aerobica,
+      resistencia_anaerobica,
+      flexibilidad,
     });
 
     return res.json({ message: "Jugador actualizado correctamente" });
@@ -213,7 +221,6 @@ exports.actualizarJugador = async (req, res) => {
     return res.status(500).json({ error: "Error al actualizar jugador" });
   }
 };
-
 
 exports.verJugador = async (req, res) => {
   const { id } = req.params;

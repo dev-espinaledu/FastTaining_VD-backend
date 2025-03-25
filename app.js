@@ -1,19 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config(); // Cargar variables de entorno
-
 const usuarios = require("./routes/usuarioRoutes");
 const jugadores = require("./routes/jugadorRoutes");
 const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
-
 const datosSesion = require("./routes/datosEntrenamientoRoutes");
 const entrenamiento = require("./routes/entrenamientoRoutes");
-
-
 const equipoRoutes = require("./routes/equipoRoutes");
-const calendarioRoutes = require('./routes/calendarioRoutes');
+const calendarioRoutes = require("./routes/calendarioRoutes");
 const authRoutes = require("./routes/authRoutes");
 const sesionesRoutes = require("./routes/sesionesRoutes");
 const app = express();
@@ -38,7 +34,7 @@ app.use("/api", persona);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
-app.use("/api", calendarioRoutes);
+// app.use("/api", calendarioRoutes);
 app.use("/api", entrenamiento);
 app.use("/api", datosSesion);
 
