@@ -120,20 +120,26 @@ const generarEntrenamientoIndividual = async (req, res) => {
   }
 };
 
-const verEntrenamiento = async (req, res) => {
+const verEntrenamientoIndividual = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Buscar el entrenamiento en la base de datos
-    const entrenamiento = await DatoSesion.findByPk(id, {
-      include: [{ model: Entrenamiento, as: "entrenamiento" }],
+    // Buscar el entrenamiento en la base de datos con datos de entrenamiento incluidos
+    const entrenamiento = await Entrenamiento.findByPk(id, {
+      include: [{
+        model: DatoSesion,
+        as: "datos_sesion",
+        attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
+      }],
     });
 
     if (!entrenamiento) {
       return res.status(404).json({ error: "Entrenamiento no encontrado" });
     }
 
-    const datos = entrenamiento.entrenamiento;
+    const datos = entrenamiento.datos_sesion;
+    
+    console.log("Datos del entrenamiento:", datos);
 
     // Verificar si las fases existen antes de parsear
     const formatoEntrenamiento = {
@@ -142,18 +148,18 @@ const verEntrenamiento = async (req, res) => {
       fase_final: entrenamiento.fase_final ? JSON.parse(entrenamiento.fase_final) : [],
     };
 
-    //No es necesario hacer JSON.parse(entrenamiento)
-    console.log("Entrenamiento encontrado:", entrenamiento);
+    console.log("Fases del entrenamiento:", formatoEntrenamiento);
 
     // Convertir la estructura en un formato más legible
     const entrenamientoFormateado = Object.entries(formatoEntrenamiento).map(([fase, ejercicios]) => ({
       titulo: fase.replace("_", " ").toUpperCase(),
-      ejercicios: ejercicios.map(ejercicio => ({
-        fecha: datos.fecha,
-        objetivo: datos.objetivo,
-        posicion: datos.posicion, // Asegurar que la propiedad existe
-        nombre: ejercicio.nombre,
-      })),
+      ejercicios: Array.isArray(ejercicios) && ejercicios.length > 0
+        ? ejercicios.map(ejercicio => ({
+            fecha: datos?.fecha || "Fecha no disponible",
+            objetivo: datos?.objetivo || "Objetivo no disponible",
+            nombre: ejercicio?.nombre || "Ejercicio sin nombre",
+          }))
+        : [{ mensaje: "No hay ejercicios en esta fase" }], // Mensaje si la fase está vacía
     }));
 
     res.json({ entrenamiento: entrenamientoFormateado });
@@ -164,6 +170,51 @@ const verEntrenamiento = async (req, res) => {
   }
 };
 
+const verEntrenamiento = async (req, res) => {
+  try {
+    const entrenamiento = await Entrenamiento.findAll({
+      include: [{
+        model: DatoSesion,
+        as: "datos_sesion",
+        attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
+      }],
+    });
 
-module.exports = { generarEntrenamientoIndividual, verEntrenamiento };
+    if (!entrenamiento) {
+      return res.status(404).json({ error: "Entrenamiento no encontrado" });
+    }
+
+    const datos = entrenamiento.datos_sesion;
+    
+    console.log("Datos del entrenamiento:", datos);
+
+    // Verificar si las fases existen antes de parsear
+    const formatoEntrenamiento = {
+      fase_inicial: entrenamiento.fase_inicial ? JSON.parse(entrenamiento.fase_inicial) : [],
+      fase_central: entrenamiento.fase_central ? JSON.parse(entrenamiento.fase_central) : [],
+      fase_final: entrenamiento.fase_final ? JSON.parse(entrenamiento.fase_final) : [],
+    };
+
+    return {
+      id: entrenamiento.id,
+      fecha: datos.fecha || "Fecha no disponible",
+      objetivo: datos.objetivo || "Objetivo no disponible",
+      /* fases: Object.entries(formatoEntrenamiento).map(([fase, ejercicios]) => ({
+        titulo: fase.replace("_", " ").toUpperCase(),
+        ejercicios: Array.isArray(ejercicios) && ejercicios.length > 0
+          ? ejercicios.map(ejercicio => ({
+              nombre: ejercicio?.nombre || "Ejercicio sin nombre",
+            }))
+          : [{ mensaje: "No hay ejercicios en esta fase" }],
+      }) ),*/
+    };
+
+  } catch (error) {
+  console.error("Error obteniendo los entrenamientos:", error);
+  res.status(500).json({ error: "Error interno del servidor" });
+};
+};
+
+
+module.exports = { generarEntrenamientoIndividual, verEntrenamiento, verEntrenamientoIndividual};
 
