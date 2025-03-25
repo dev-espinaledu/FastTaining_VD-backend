@@ -17,10 +17,12 @@ exports.verJugadores = async (req, res) => {
       include: [
         {
           model: Usuario,
+          as: "usuarios", // Usa el alias definido en la relación
           attributes: ["email"],
           include: [
             {
               model: Persona,
+              as: "personas", // Usa el alias definido en la relación
               attributes: ["nombre", "apellido"],
             },
           ],
@@ -30,9 +32,9 @@ exports.verJugadores = async (req, res) => {
 
     const jugadores = response.map((jugador) => ({
       id: jugador.id,
-      nombre: jugador.Usuario.Persona.nombre,
-      apellido: jugador.Usuario.Persona.apellido,
-      email: jugador.Usuario.email,
+      nombre: jugador.usuarios?.personas?.nombre || "Desconocido", // Usa el alias correcto
+      apellido: jugador.usuarios?.personas?.apellido || "Desconocido",
+      email: jugador.usuarios?.email || "Sin correo",
       posicion: jugador.posicion,
       altura: jugador.altura,
       peso: jugador.peso,
@@ -42,6 +44,21 @@ exports.verJugadores = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error al obtener jugadores" });
+  }
+};
+
+exports.verJugador = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
+      id,
+    ]);
+    if (response.rows.length === 0)
+      return res.status(404).json({ error: "Jugador no encontrado" });
+    return res.json(response.rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Error al obtener jugador" });
   }
 };
 
@@ -150,6 +167,7 @@ exports.crearJugador = async (req, res) => {
   }
 };
 
+// Esta función está hecha para el admin, controla todo los aspectos del jugador, como usuario, persona y jugador
 exports.actualizarJugador = async (req, res) => {
   try {
     const { id } = req.params;
@@ -222,37 +240,40 @@ exports.actualizarJugador = async (req, res) => {
   }
 };
 
-exports.verJugador = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
-      id,
-    ]);
-    if (response.rows.length === 0)
-      return res.status(404).json({ error: "Jugador no encontrado" });
-    return res.json(response.rows[0]);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Error al obtener jugador" });
-  }
-};
-
+// Esta función es para que el entrenador registre datos físicos del jugador.
 exports.actualizarCapacidadJugador = async (req, res) => {
   const { id } = req.params;
   const {
-    posicion,
     altura,
-    frecuencia_cardiaca,
     peso,
-    resistencia,
+    posicion,
+    porcentaje_grasa_corporal,
+    porcentaje_masa_muscular,
+    tipo_cuerpo,
     fuerza,
-    velocidad,
-    potencia,
+    velocidad_max,
+    resistencia_aerobica,
+    resistencia_anaerobica,
+    flexibilidad,
   } = req.body;
   try {
     const jugador = await Jugador.findByPk(id);
     if (!jugador)
       return res.status(404).json({ error: "Jugador no encontrado" });
+
+    await jugador.update({
+      altura,
+      peso,
+      posicion,
+      porcentaje_grasa_corporal,
+      porcentaje_masa_muscular,
+      tipo_cuerpo,
+      fuerza,
+      velocidad_max,
+      resistencia_aerobica,
+      resistencia_anaerobica,
+      flexibilidad,
+    });
 
     return res.json({
       message: "Jugador actualizado",
