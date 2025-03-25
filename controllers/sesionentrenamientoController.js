@@ -44,7 +44,7 @@ const generarEntrenamiento = async (req, res) => {
           - Velocidad máxima (30m): ${jugador.velocidad} s
           - Resistencia: ${jugador.resistencia} ml/kg/min
           - Resistencia aerobica: ${jugador.resistencia_aerobica} ml/kg/min
-          - Resistencia anaerobica: ${jugador.resistencia_anaerobica} ml/kg/min
+          - Resistencia anaerobica (300m): ${jugador.resistencia_anaerobica} s
           - Flexibilidad: ${jugador.flexibilidad} cm
 
           Devuelve un entrenamiento estructurado en tres fases:

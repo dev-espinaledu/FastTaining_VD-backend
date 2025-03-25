@@ -28,7 +28,13 @@ const verEntrenador = async (req, res) => {
 
 const crearEntrenador = async (req, res) => {
   try {
-    const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
+    const {
+      nombre, 
+      apellido,
+      email,
+      pass,
+      telefono,
+      equipo_id } = req.body;
     const password = await bcrypt.hash(pass, 10);
     const newPersona = await Persona.create({ nombre, apellido, telefono });
     const newUsuario = await Usuario.create({
@@ -38,6 +44,7 @@ const crearEntrenador = async (req, res) => {
       rol_id: 3,
     });
     const newEntrenador = await Entrenador.create({
+      usuario_id:newUsuario.id,
       equipo_id,
     });
 
