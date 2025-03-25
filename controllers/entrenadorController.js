@@ -109,9 +109,4 @@ const actualizarEntrenador = async (req, res) => {
   }
 };
 
-module.exports = {
-  verEntrenadores,
-  crearEntrenador,
-  verEntrenador,
-  actualizarEntrenador,
-};
+module.exports = { verEntrenadores, crearEntrenador, verEntrenador };

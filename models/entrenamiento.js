@@ -9,15 +9,18 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
-  Entrenamiento.init({
-    datos_sesion_id: DataTypes.SMALLINT,
-    fase_inicial: DataTypes.JSONB,
-    fase_central: DataTypes.JSONB,
-    fase_final: DataTypes.JSONB,
-  }, {
-    sequelize,
-    modelName: 'Entrenamiento',
-    tableName: 'entrenamientos'
-  });
+  Entrenamiento.init(
+    {
+      datos_sesion_id: DataTypes.SMALLINT,
+      fase_inicial: DataTypes.JSONB,
+      fase_central: DataTypes.JSONB,
+      fase_final: DataTypes.JSONB,
+    },
+    {
+      sequelize,
+      modelName: "Entrenamiento",
+      tableName: "entrenamientos",
+    },
+  );
   return Entrenamiento;
 };
