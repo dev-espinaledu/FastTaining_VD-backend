@@ -17,9 +17,11 @@ exports.verJugadores = async (req, res) => {
 exports.crearJugador = async (req, res) => {
   const {
     nombre,
+    apellido,
     telefono,
     email,
     pass,
+    equipo_id,
     fecha_nacimiento,
     altura,
     peso,
@@ -32,7 +34,6 @@ exports.crearJugador = async (req, res) => {
     resistencia_aerobica,
     resistencia_anaerobica,
     flexibilidad,
-    equipo_id
   } = req.body;
   try {
     let password = await bcrypt.hash(pass, 10);
@@ -44,16 +45,20 @@ exports.crearJugador = async (req, res) => {
       rol_id: 2,
     });
     const jugador = await Jugador.create({
-      fecha_nacimiento,
-      posicion,
-      altura,
-      frecuencia_cardiaca,
-      peso,
-      resistencia,
-      fuerza,
-      velocidad,
-      potencia,
+      usuario_id:usuario.id,
       equipo_id,
+      fecha_nacimiento,
+      altura,
+      peso,
+      posicion,
+      porcentaje_grasa_corporal,
+      porcentaje_masa_muscular,
+      tipo_cuerpo,
+      fuerza,
+      velocidad_max,
+      resistencia_aerobica,
+      resistencia_anaerobica,
+      flexibilidad,
     });
 
     return res.json({
