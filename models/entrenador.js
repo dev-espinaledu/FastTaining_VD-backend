@@ -4,16 +4,15 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Entrenador extends Model {
     static associate(models) {
-
       // Un Entrenador pertenece a un solo Equipo
       Entrenador.belongsTo(models.Equipo, {
         foreignKey: "equipo_id",
         as: "equipos",
         onUpdate: "CASCADE",
       });
-      Entrenador.belongsTo(models.Persona, {
-        foreignKey: "persona_id",
-        as: "persona",
+      Entrenador.belongsTo(models.Usuario, {
+        foreignKey: "usuario_id",
+        as: "usuario",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       });
@@ -21,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Entrenador.init(
     {
-      equipo_id: DataTypes.SMALLINT
+      equipo_id: DataTypes.SMALLINT,
     },
     {
       sequelize,
