@@ -75,8 +75,25 @@ exports.verJugadores = async (req, res) => {
 
 
 exports.crearJugador = async (req, res) => {
-  const t = await sequelize.transaction(); 
-
+  const {
+    nombre,
+    telefono,
+    email,
+    pass,
+    fecha_nacimiento,
+    altura,
+    peso,
+    posicion,
+    porcentaje_grasa_corporal,
+    porcentaje_masa_muscular,
+    tipo_cuerpo,
+    fuerza,
+    velocidad_max,
+    resistencia_aerobica,
+    resistencia_anaerobica,
+    flexibilidad,
+    equipo_id
+  } = req.body;
   try {
     const {
       nombre,

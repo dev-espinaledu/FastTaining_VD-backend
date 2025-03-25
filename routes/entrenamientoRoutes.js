@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const entrenamientoController = require("../controllers/sesionEntrenamientoController");
+const {generarEntrenamiento} = require('../controllers/sesionentrenamientoController')
 
-router.post("/entrenamiento/crear", entrenamientoController.crearEntrenamiento);
+router.post("/entrenamiento/crear/:id", generarEntrenamiento);
+//router.post("/crea", entrenamientoController.);
 
 module.exports = router;

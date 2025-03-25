@@ -9,6 +9,14 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.SMALLINT,
       },
+      usuario_id: {
+        type: Sequelize.SMALLINT,
+        allowNull: false,
+        references: {
+          model: "usuarios",
+          key: "id",
+        },
+      },
       equipo_id: {
         type: Sequelize.SMALLINT,
         allowNull: false,

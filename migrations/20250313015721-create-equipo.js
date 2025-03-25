@@ -2,8 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const { DataTypes } = Sequelize;
-    await queryInterface.createTable("roles", {
+    await queryInterface.createTable("equipos", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -11,7 +10,16 @@ module.exports = {
         type: Sequelize.SMALLINT,
       },
       nombre: {
-        type: DataTypes.ENUM("admin", "entrenador", "jugador"),
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      escudo_url: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      descripcion: {
+        type: Sequelize.STRING,
+        allowNull: true
       },
       createdAt: {
         allowNull: false,
@@ -24,9 +32,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_roles_nombre";',
-    );
-    await queryInterface.dropTable("roles");
+    await queryInterface.dropTable("equipos");
   },
 };
