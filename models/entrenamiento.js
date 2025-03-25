@@ -14,8 +14,6 @@ module.exports = (sequelize, DataTypes) => {
     fase_inicial: DataTypes.JSONB,
     fase_central: DataTypes.JSONB,
     fase_final: DataTypes.JSONB,
-
-
   }, {
     sequelize,
     modelName: 'Entrenamiento',

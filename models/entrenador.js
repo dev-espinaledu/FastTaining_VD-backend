@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       // Un Entrenador pertenece a un solo Equipo
       Entrenador.belongsTo(models.Equipo, {
         foreignKey: "equipo_id",
-        as: "equipos", 
+        as: "equipos",
         onUpdate: "CASCADE",
       });
       Entrenador.belongsTo(models.Persona, {

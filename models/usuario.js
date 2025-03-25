@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "usuario_id",
                 as: "entrenadores",
             });
-            
+
             Usuario.hasOne(models.Jugador, {
                 foreignKey: "usuario_id",
                 as: "jugadores",
@@ -24,7 +24,6 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "usuario_id",
                 as: "administradores",
             });
-
         }
     }
     Usuario.init({
@@ -33,12 +32,12 @@ module.exports = (sequelize, DataTypes) => {
         persona_id: DataTypes.SMALLINT,
         rol_id: DataTypes.SMALLINT,
     },
-    { 
+    {
         sequelize,
         modelName: "Usuario",
         tableName: "usuarios",
         schema: "public",
     },
-    ); 
+    );
     return Usuario;
 };

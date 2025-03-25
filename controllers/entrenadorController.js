@@ -39,13 +39,7 @@ const crearEntrenador = async (req, res) => {
   const t = await sequelize.transaction(); // Iniciar la transacción
 
   try {
-    const {
-      nombre, 
-      apellido,
-      email,
-      pass,
-      telefono,
-      equipo_id } = req.body;
+    const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
 
     const usuarioExistente = await Usuario.findOne({ where: { email } });
     if (usuarioExistente) {
@@ -54,19 +48,6 @@ const crearEntrenador = async (req, res) => {
     }
 
     const password = await bcrypt.hash(pass, 10);
-<<<<<<< HEAD
-    const newPersona = await Persona.create({ nombre, apellido, telefono });
-    const newUsuario = await Usuario.create({
-      email,
-      password,
-      persona_id: newPersona.id,
-      rol_id: 3,
-    });
-    const newEntrenador = await Entrenador.create({
-      usuario_id:newUsuario.id,
-      equipo_id,
-    });
-=======
 
     // Crear registros dentro de la transacción
     const newPersona = await Persona.create(
@@ -80,12 +61,11 @@ const crearEntrenador = async (req, res) => {
     );
 
     const newEntrenador = await Entrenador.create(
-      { persona_id: newPersona.id, equipo_id },
+      { usuario_id: newUsuario.id, equipo_id },
       { transaction: t },
     );
 
     await t.commit(); // Confirmar transacción
->>>>>>> 73e7ef13e32a6df61a4fbb3d840c33cd0371caf8
 
     res.status(201).json({ entrenador: newEntrenador });
   } catch (e) {
@@ -100,7 +80,7 @@ const actualizarEntrenador = async (req, res) => {
     const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
 
     const entrenador = await Entrenador.findByPk(id, {
-      include: [{ model: Usuario, include: [Persona] }]
+      include: [{ model: Usuario, include: [Persona] }],
     });
 
     if (!entrenador) {
@@ -128,5 +108,9 @@ const actualizarEntrenador = async (req, res) => {
   }
 };
 
-
-module.exports = { verEntrenadores, crearEntrenador, verEntrenador, actualizarEntrenador };
+module.exports = {
+  verEntrenadores,
+  crearEntrenador,
+  verEntrenador,
+  actualizarEntrenador,
+};
