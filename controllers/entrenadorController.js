@@ -35,9 +35,10 @@ const crearEntrenador = async (req, res) => {
       email,
       password,
       persona_id: newPersona.id,
-      rol_id: 3,
+      rol_id: 2,
     });
     const newEntrenador = await Entrenador.create({
+      usuario_id: newUsuario.id,
       equipo_id,
     });
 
