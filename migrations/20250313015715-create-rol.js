@@ -4,7 +4,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
-      CREATE TYPE "enum_roles" AS ENUM ('admin','entrenador','jugador');
+      CREATE TYPE "enum_roles_3" AS ENUM ('admin','entrenador','jugador');
       `)
     
     await queryInterface.createTable("roles", {
@@ -31,7 +31,7 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("roles");
     await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_roles";',
+      'DROP TYPE IF EXISTS "enum_roles_3";',
     );
     await queryInterface.dropTable("roles");
   },

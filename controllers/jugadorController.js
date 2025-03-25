@@ -42,7 +42,7 @@ exports.crearJugador = async (req, res) => {
       email,
       password,
       persona_id: persona.id,
-      rol_id: 2,
+      rol_id: 3,
     });
     const jugador = await Jugador.create({
       usuario_id:usuario.id,
