@@ -70,6 +70,7 @@ const crearEntrenador = async (req, res) => {
     res.status(201).json({ entrenador: newEntrenador });
   } catch (e) {
     await t.rollback(); // Revertir en caso de error
+    console.log(e);
     res.status(500).json({ error: "Error al crear entrenador" });
   }
 };
