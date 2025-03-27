@@ -257,7 +257,7 @@ exports.actualizarCapacidadJugador = async (req, res) => {
 
     return res.json({
       message: "Jugador actualizado",
-      jugador: { fecha_nacimiento, posicion, altura },
+      jugador: { jugador },
     });
   } catch (error) {
     console.error(error);
