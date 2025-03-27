@@ -1,4 +1,3 @@
-
 const {DatoSesion, Entrenamiento, Jugador} = require("../models");
 /* const Openai = require("../api/openia");
 const axios = require("axios");
@@ -9,6 +8,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Obtener la sesión con el jugador asociado
     const sesion = await DatoSesion.findByPk(id, {
       include: [{ model: Jugador, as: "jugadores" }],
     });
@@ -42,14 +42,14 @@ const generarEntrenamientoIndividual = async (req, res) => {
           - Fuerza: ${jugador.fuerza}
           - Velocidad máxima (30m): ${jugador.velocidad} s
           - Resistencia: ${jugador.resistencia} ml/kg/min
-          - Resistencia aerobica: ${jugador.resistencia_aerobica} ml/kg/min
-          - Resistencia anaerobica (300m): ${jugador.resistencia_anaerobica} s
+          - Resistencia aeróbica: ${jugador.resistencia_aerobica} ml/kg/min
+          - Resistencia anaeróbica (300m): ${jugador.resistencia_anaerobica} s
           - Flexibilidad: ${jugador.flexibilidad} cm
 
           Devuelve un entrenamiento estructurado en tres fases:
-          1. **Fase Inicial**: Ejercicios de calentamiento.
-          2. **Fase Central**: Ejercicios específicos de fútbol.
-          3. **Fase Final**: Ejercicios de enfriamiento.
+          1. *Fase Inicial*: Ejercicios de calentamiento.
+          2. *Fase Central*: Ejercicios específicos de fútbol.
+          3. *Fase Final*: Ejercicios de enfriamiento.
 
           Responde en formato JSON con esta estructura:
           {
@@ -60,7 +60,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
         }
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 300,
     };
 
     // Llamada a la API de OpenRouter
@@ -68,7 +68,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENROUTE_API_KEY}`,
+        "Authorization": Bearer ${process.env.OPENROUTE_API_KEY},
       },
       body: JSON.stringify(mensajeIA),
     });
@@ -83,18 +83,18 @@ const generarEntrenamientoIndividual = async (req, res) => {
     let contenidoIA = data.choices[0].message.content;
     console.log("Contenido recibido de la IA:", contenidoIA);
 
-    // Quitar código Markdown si está presente
-    if (contenidoIA.startsWith("```json")) {
-      contenidoIA = contenidoIA.slice(7, -3).trim();
-    } else if (contenidoIA.startsWith("```")) {
-      contenidoIA = contenidoIA.slice(3, -3).trim();
+    // Extraer solo el JSON válido
+    const jsonMatch = contenidoIA.match(/{[\s\S]*}/);
+    if (!jsonMatch) {
+      console.error("No se encontró JSON válido en la respuesta de la IA:", contenidoIA);
+      return res.status(500).json({ error: "Formato inválido en la respuesta de la IA" });
     }
 
-    // Validar JSON antes de parsearlo
+    let entrenamiento;
     try {
-      entrenamiento = JSON.parse(contenidoIA);
+      entrenamiento = JSON.parse(jsonMatch[0]);
     } catch (error) {
-      console.error("Error al parsear JSON de la IA:", error, "Contenido recibido:", contenidoIA);
+      console.error("Error al parsear JSON de la IA:", error, "Contenido recibido:", jsonMatch[0]);
       return res.status(500).json({ error: "Formato inválido en la respuesta de la IA" });
     }
 
@@ -103,13 +103,12 @@ const generarEntrenamientoIndividual = async (req, res) => {
       return res.status(500).json({ error: "Estructura inválida en la respuesta de la IA" });
     }
 
-    // Guardar en la base de datos
+    // Guardar en la base de datos (si las columnas son JSONB, no es necesario JSON.stringify)
     const nuevoEntrenamiento = await Entrenamiento.create({
       datos_sesion_id: sesion.id,
-      
-      fase_inicial: JSON.stringify(entrenamiento.fase_inicial),
-      fase_central: JSON.stringify(entrenamiento.fase_central),
-      fase_final: JSON.stringify(entrenamiento.fase_final),
+      fase_inicial: entrenamiento.fase_inicial,
+      fase_central: entrenamiento.fase_central,
+      fase_final: entrenamiento.fase_final,
     });
 
     console.log("Entrenamiento creado con éxito");
@@ -172,7 +171,8 @@ const verEntrenamientoIndividual = async (req, res) => {
 
 const verEntrenamiento = async (req, res) => {
   try {
-    const entrenamiento = await Entrenamiento.findAll({
+    // Buscar todos los entrenamientos junto con sus datos de sesión
+    const entrenamientos = await Entrenamiento.findAll({
       include: [{
         model: DatoSesion,
         as: "datos_sesion",
@@ -180,41 +180,35 @@ const verEntrenamiento = async (req, res) => {
       }],
     });
 
-    if (!entrenamiento) {
-      return res.status(404).json({ error: "Entrenamiento no encontrado" });
+    // Si no hay entrenamientos, devolver un mensaje adecuado
+    if (entrenamientos.length === 0) {
+      return res.status(404).json({ error: "No hay entrenamientos disponibles" });
     }
 
-    const datos = entrenamiento.datos_sesion;
-    
-    console.log("Datos del entrenamiento:", datos);
+    // Formatear cada entrenamiento
+    const entrenamientosFormateados = entrenamientos.map(entrenamiento => {
+      const datos = entrenamiento.datos_sesion || {}; // Evita errores si datos_sesion es null
 
-    // Verificar si las fases existen antes de parsear
-    const formatoEntrenamiento = {
-      fase_inicial: entrenamiento.fase_inicial ? JSON.parse(entrenamiento.fase_inicial) : [],
-      fase_central: entrenamiento.fase_central ? JSON.parse(entrenamiento.fase_central) : [],
-      fase_final: entrenamiento.fase_final ? JSON.parse(entrenamiento.fase_final) : [],
-    };
+      return {
+        id: entrenamiento.id,
+        fecha: datos.fecha || "Fecha no disponible",
+        objetivo: datos.objetivo || "Objetivo no disponible",
+        fases: {
+          fase_inicial: entrenamiento.fase_inicial || [],
+          fase_central: entrenamiento.fase_central || [],
+          fase_final: entrenamiento.fase_final || [],
+        },
+      };
+    });
 
-    return {
-      id: entrenamiento.id,
-      fecha: datos.fecha || "Fecha no disponible",
-      objetivo: datos.objetivo || "Objetivo no disponible",
-      /* fases: Object.entries(formatoEntrenamiento).map(([fase, ejercicios]) => ({
-        titulo: fase.replace("_", " ").toUpperCase(),
-        ejercicios: Array.isArray(ejercicios) && ejercicios.length > 0
-          ? ejercicios.map(ejercicio => ({
-              nombre: ejercicio?.nombre || "Ejercicio sin nombre",
-            }))
-          : [{ mensaje: "No hay ejercicios en esta fase" }],
-      }) ),*/
-    };
+    res.json(entrenamientosFormateados);
 
   } catch (error) {
-  console.error("Error obteniendo los entrenamientos:", error);
-  res.status(500).json({ error: "Error interno del servidor" });
+    console.error("Error obteniendo los entrenamientos:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 };
-};
+
 
 
 module.exports = { generarEntrenamientoIndividual, verEntrenamiento, verEntrenamientoIndividual};
-
