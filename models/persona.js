@@ -3,26 +3,13 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Persona extends Model {
     static associate(models) {
-      
-      // Relación 1 a 1 con Usuario
       this.hasOne(models.Usuario, {
         foreignKey: "persona_id",
-        as: "usuarios", 
-        onDelete: "CASCADE", 
-        onUpdate: "CASCADE",
-      });
-      this.hasOne(models.Jugador, {
-        foreignKey: "persona_id",
-        as: "jugador",
+        as: "usuarios",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       });
-      this.hasOne(models.Entrenador, {
-        foreignKey: "persona_id",
-        as: "entrenador",
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
-      });
+
     }
   }
   Persona.init(
