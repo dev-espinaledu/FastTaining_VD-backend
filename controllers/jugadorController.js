@@ -2,43 +2,10 @@ const pool = require("../config/db");
 const { Persona, Usuario, Jugador, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 
-// exports.verJugadores = async (req, res) => {
-//   try {
-//     const response = await Jugador.findAll({
-//       include: [
-//         {
-//           model: Usuario,
-//           attributes: ["email"],
-//           include: [
-//             {
-//               model: Persona,
-//               attributes: ["nombre", "apellido"],
-//             },
-//           ],
-//         },
-//       ],
-//     });
-
-//     const jugadores = response.map((jugador) => ({
-//       id: jugador.id,
-//       nombre: jugador.Usuario.Persona.nombre,
-//       apellido: jugador.Usuario.Persona.apellido,
-//       email: jugador.Usuario.email,
-//       posicion: jugador.posicion,
-//       altura: jugador.altura,
-//       peso: jugador.peso,
-//     }));
-
-//     return res.json(jugadores);
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ error: "Error al obtener jugadores" });
-//   }
-// };
-
 exports.verJugadores = async (req, res) => {
   try {
     const response = await Jugador.findAll({
+      attributes: { exclude: ["frecuencia_cardiaca"] },
       include: [
         {
           model: Usuario,
@@ -290,7 +257,7 @@ exports.actualizarCapacidadJugador = async (req, res) => {
 
     return res.json({
       message: "Jugador actualizado",
-      jugador: { fecha_nacimiento, posicion, altura },
+      jugador: { jugador },
     });
   } catch (error) {
     console.error(error);

@@ -3,22 +3,21 @@ const {DatoSesion, Entrenamiento, Jugador} = require("../models");
 /* const Openai = require("../api/openia");
 const axios = require("axios");
  */
-
 require("dotenv").config();
 
-const generarEntrenamiento = async (req, res) => {
+const generarEntrenamientoIndividual = async (req, res) => {
   const { id } = req.params;
 
   try {
     const sesion = await DatoSesion.findByPk(id, {
-      include: [{ model: Jugador, as: "Jugadores" }],
+      include: [{ model: Jugador, as: "jugadores" }],
     });
 
     if (!sesion) {
       return res.status(404).json({ error: "Sesión no encontrada" });
     }
 
-    const jugador = sesion.Jugadores;
+    const jugador = sesion.jugadores;
     if (!jugador) {
       return res.status(404).json({ error: "Jugador no encontrado en la sesión" });
     }
@@ -106,7 +105,7 @@ const generarEntrenamiento = async (req, res) => {
 
     // Guardar en la base de datos
     const nuevoEntrenamiento = await Entrenamiento.create({
-      id_datos_sesion: sesion.id,
+      datos_sesion_id: sesion.id,
       
       fase_inicial: JSON.stringify(entrenamiento.fase_inicial),
       fase_central: JSON.stringify(entrenamiento.fase_central),
@@ -121,85 +120,101 @@ const generarEntrenamiento = async (req, res) => {
   }
 };
 
-module.exports = { generarEntrenamiento };
-
-/* 
-const generarEntrenamiento = async (req, res) => {
-  const { id } = req.params;
-
+const verEntrenamientoIndividual = async (req, res) => {
   try {
+    const { id } = req.params;
 
-
-    const sesion = await DatoSesion.findByPk(id,
-      {include:[{model: Jugador, as: "Jugadores"}]}
-    );
-
-
-    //Consulta IA
-    const mensajeIA = (jugador) =>{
-         return `Genera una sesión de entrenamiento para un jugador enfocado en el objetivo de entrenamiento ${sesion.objetivo} con estas características:
-          - Fecha de nacimiento: ${jugador.fechaNacimiento}
-          - Altura: ${jugador.altura} cm
-          - Peso: ${jugador.peso} kg
-          - Posición: ${jugador.posicion}
-          - Grasa corporal: ${jugador.porcentaje_grasa_corporal}
-          - Grasa muscular: ${jugador.porcentaje_masa_muscular}
-          - Tipo de cuerpo: ${jugador.tipo_cuerpo}
-          - Fuerza: ${jugador.fuerza}
-          - Velocidad máxima(30m): ${jugador.velocidad} s
-          - resistencia:${jugador.resistencia}  ml/kg/min
-          - resistencia cardiovascular:${jugador.resistencia_cardiovascular}  ml/kg/min
-          - resistencia muscular:${jugador.resistencia_muscular}  ml/kg/min
-          - flexibilidad:${jugador.flexibilidad} cm
-          Devuelve un entrenamiento estructurado en tres fases:
-          1. **Fase Inicial**: Ejercicios de calentamiento.
-          2. **Fase Central**: Ejercicios específicos de fútbol.
-          3. **Fase Final**: Ejercicios de enfriamiento.
-
-          Responde en formato JSON con esta estructura:
-          {
-            "fase_inicial": ["ejercicio1", "ejercicio2","ejercicio n","repeticiones","series"],
-            "fase_central": ["ejercicio1", "ejercicio2","ejercicio n","repeticiones","series"],
-            "fase_final": ["ejercicio1", "ejercicio2","ejercicio n","repeticiones","series"]
-          }`;
-        };
-    
-    const jugador = sesion.Jugadores;
-
-    const respuestaIA = await Openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: "Eres un experto en entrenamiento de fútbol." },
-          { role: "user", content: mensajeIA(jugador) },
-        ],
-        temperature: 0.7,
-        max_tokens: 100,
-      });
-
-      if (!respuestaIA.choices || respuestaIA.choices.length === 0) {
-        return res.status(500).json({ error: "Error en la respuesta de OpenAI" });
-      }
-
-
-    //Formato JSON
-    const entrenamiento = JSON.parse(respuestaIA.choices[0].message.content);
-
-    // Base de datos
-    const nuevoEntrenamiento = await Entrenamiento.create({
-      id_jugador: jugador.id, 
-      fase_inicial: JSON.stringify(entrenamiento.fase_inicial),
-      fase_central: JSON.stringify(entrenamiento.fase_central),
-      fase_final: JSON.stringify(entrenamiento.fase_final),
-      id_datos_sesion: sesion.id
+    // Buscar el entrenamiento en la base de datos con datos de entrenamiento incluidos
+    const entrenamiento = await Entrenamiento.findByPk(id, {
+      include: [{
+        model: DatoSesion,
+        as: "datos_sesion",
+        attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
+      }],
     });
 
-    //REspuesta
-    console.log("Enrtrenamiento Creado y guardado correctamentee")
-    return res.status(201).json(nuevoEntrenamiento);
+    if (!entrenamiento) {
+      return res.status(404).json({ error: "Entrenamiento no encontrado" });
+    }
+
+    const datos = entrenamiento.datos_sesion;
+    
+    console.log("Datos del entrenamiento:", datos);
+
+    // Verificar si las fases existen antes de parsear
+    const formatoEntrenamiento = {
+      fase_inicial: entrenamiento.fase_inicial ? JSON.parse(entrenamiento.fase_inicial) : [],
+      fase_central: entrenamiento.fase_central ? JSON.parse(entrenamiento.fase_central) : [],
+      fase_final: entrenamiento.fase_final ? JSON.parse(entrenamiento.fase_final) : [],
+    };
+
+    console.log("Fases del entrenamiento:", formatoEntrenamiento);
+
+    // Convertir la estructura en un formato más legible
+    const entrenamientoFormateado = Object.entries(formatoEntrenamiento).map(([fase, ejercicios]) => ({
+      titulo: fase.replace("_", " ").toUpperCase(),
+      ejercicios: Array.isArray(ejercicios) && ejercicios.length > 0
+        ? ejercicios.map(ejercicio => ({
+            fecha: datos?.fecha || "Fecha no disponible",
+            objetivo: datos?.objetivo || "Objetivo no disponible",
+            nombre: ejercicio?.nombre || "Ejercicio sin nombre",
+          }))
+        : [{ mensaje: "No hay ejercicios en esta fase" }], // Mensaje si la fase está vacía
+    }));
+
+    res.json({ entrenamiento: entrenamientoFormateado });
+
   } catch (error) {
-    console.error("Error generando entrenamiento:", error);
-    return res.status(500).json({ error: "Error generando entrenamiento" });
+    console.error("Error obteniendo el entrenamiento:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
- */
+const verEntrenamiento = async (req, res) => {
+  try {
+    const entrenamiento = await Entrenamiento.findAll({
+      include: [{
+        model: DatoSesion,
+        as: "datos_sesion",
+        attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
+      }],
+    });
+
+    if (!entrenamiento) {
+      return res.status(404).json({ error: "Entrenamiento no encontrado" });
+    }
+
+    const datos = entrenamiento.datos_sesion;
+    
+    console.log("Datos del entrenamiento:", datos);
+
+    // Verificar si las fases existen antes de parsear
+    const formatoEntrenamiento = {
+      fase_inicial: entrenamiento.fase_inicial ? JSON.parse(entrenamiento.fase_inicial) : [],
+      fase_central: entrenamiento.fase_central ? JSON.parse(entrenamiento.fase_central) : [],
+      fase_final: entrenamiento.fase_final ? JSON.parse(entrenamiento.fase_final) : [],
+    };
+
+    return {
+      id: entrenamiento.id,
+      fecha: datos.fecha || "Fecha no disponible",
+      objetivo: datos.objetivo || "Objetivo no disponible",
+      /* fases: Object.entries(formatoEntrenamiento).map(([fase, ejercicios]) => ({
+        titulo: fase.replace("_", " ").toUpperCase(),
+        ejercicios: Array.isArray(ejercicios) && ejercicios.length > 0
+          ? ejercicios.map(ejercicio => ({
+              nombre: ejercicio?.nombre || "Ejercicio sin nombre",
+            }))
+          : [{ mensaje: "No hay ejercicios en esta fase" }],
+      }) ),*/
+    };
+
+  } catch (error) {
+  console.error("Error obteniendo los entrenamientos:", error);
+  res.status(500).json({ error: "Error interno del servidor" });
+};
+};
+
+
+module.exports = { generarEntrenamientoIndividual, verEntrenamiento, verEntrenamientoIndividual};
+

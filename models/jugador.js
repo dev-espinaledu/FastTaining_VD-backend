@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "datos_sesion",
       });
       Jugador.belongsTo(models.Persona, {
-        foreignKey: "persona_id",
+        foreignKey: "id",
         as: "persona",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
@@ -46,8 +46,8 @@ module.exports = (sequelize, DataTypes) => {
       tipo_cuerpo: DataTypes.STRING,
       fuerza: DataTypes.SMALLINT,
       velocidad_max: DataTypes.SMALLINT,
-      resistencia_aerobica: DataTypes.SMALLINT, // V02 max
-      resistencia_anaerobica: DataTypes.SMALLINT, // cantidad de tiempo que le toma mientras se desplaza una distancia definida, 300 m en segundos
+      resistencia_aerobica: DataTypes.SMALLINT,
+      resistencia_anaerobica: DataTypes.SMALLINT,
       flexibilidad: DataTypes.DOUBLE,
     },
     {
