@@ -1,9 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config(); // Cargar variables de entorno
-const usuarios = require("./routes/usuarioRoutes");
 const jugadores = require("./routes/jugadorRoutes");
-const persona = require("./routes/personaRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
 const datosSesion = require("./routes/datosEntrenamientoRoutes");
@@ -26,9 +24,7 @@ app.use(
 
 // Definir prefijo para las rutas
 app.use("/api/auth", authRoutes);
-app.use("/api", usuarios);
 app.use("/api", jugadores);
-app.use("/api", persona);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);

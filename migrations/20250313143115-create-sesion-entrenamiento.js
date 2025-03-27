@@ -29,10 +29,6 @@ module.exports = {
       fase_final: {
         type: Sequelize.JSONB
       },
-      fecha: {
-        type: Sequelize.DATE,
-        defaultValue:Sequelize.NOW
-      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
