@@ -68,7 +68,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": Bearer ${process.env.OPENROUTE_API_KEY},
+        "Authorization": `Bearer ${process.env.OPENROUTE_API_KEY}`,
       },
       body: JSON.stringify(mensajeIA),
     });
@@ -118,7 +118,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
     return res.status(500).json({ error: "Error generando entrenamiento" });
   }
 };
-
+//-------------------------------------
 const verEntrenamientoIndividual = async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,7 +127,7 @@ const verEntrenamientoIndividual = async (req, res) => {
     const entrenamiento = await Entrenamiento.findByPk(id, {
       include: [{
         model: DatoSesion,
-        as: "datos_sesion",
+        as: "datosSesion",
         attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
       }],
     });
@@ -136,7 +136,7 @@ const verEntrenamientoIndividual = async (req, res) => {
       return res.status(404).json({ error: "Entrenamiento no encontrado" });
     }
 
-    const datos = entrenamiento.datos_sesion;
+    const datos = entrenamiento.datosSesion;
     
     console.log("Datos del entrenamiento:", datos);
 
@@ -175,7 +175,7 @@ const verEntrenamiento = async (req, res) => {
     const entrenamientos = await Entrenamiento.findAll({
       include: [{
         model: DatoSesion,
-        as: "datos_sesion",
+        as: "datosSesion",
         attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
       }],
     });
@@ -187,7 +187,7 @@ const verEntrenamiento = async (req, res) => {
 
     // Formatear cada entrenamiento
     const entrenamientosFormateados = entrenamientos.map(entrenamiento => {
-      const datos = entrenamiento.datos_sesion || {}; // Evita errores si datos_sesion es null
+      const datos = entrenamiento.datosSesion || {}; // Evita errores si datosSesion es null
 
       return {
         id: entrenamiento.id,
