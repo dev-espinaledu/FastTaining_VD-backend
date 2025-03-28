@@ -9,9 +9,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "jugador_id",
         as: "jugadores",
       });
-      DatoSesion.hasOne(models.Entrenamiento, {
+      DatoSesion.hasMany(models.Entrenamiento, {
         foreignKey: "datos_sesion_id",
-        as: "entrenamiento",
+        as: "datosSesion",
       });
     }
   }
