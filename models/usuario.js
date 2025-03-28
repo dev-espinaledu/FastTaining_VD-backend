@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "usuario_id",
         as: "administradores",
       });
+
+      Usuario.hasMany(models.Token, {
+        foreignKey: "usuario_id",
+        as: "tokens",
+      });
     }
   }
   Usuario.init(
