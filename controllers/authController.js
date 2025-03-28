@@ -13,11 +13,11 @@ exports.login = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Verificar contraseña con mínimo 8 caracteres, una mayúscula, una minúscula y un número
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    // Verificar contraseña con mínimo 8 caracteres, una mayúscula, un número y un símbolo especial
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
       return res.status(400).json({
-        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.",
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
       });
     }
 
@@ -77,11 +77,11 @@ exports.restablecerContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;
 
-    // Validar la nueva contraseña con mínimo 8 caracteres, una mayúscula, una minúscula y un número
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    // Validar la nueva contraseña con mínimo 8 caracteres, una mayúscula, un número y un símbolo especial
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(nuevaContrasena)) {
       return res.status(400).json({
-        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.",
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
       });
     }
 
