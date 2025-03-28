@@ -17,7 +17,6 @@ module.exports = {
       },
       fecha_registro: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
         allowNull:false
       },
       altura: {
