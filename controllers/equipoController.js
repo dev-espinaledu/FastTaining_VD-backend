@@ -1,4 +1,4 @@
-const { Equipo } = require("../models");
+const { Equipo, Jugador } = require("../models");
 
 const verEquipos = async (req, res) => {
   try {
@@ -12,7 +12,10 @@ const verEquipos = async (req, res) => {
 const verEquipo = async (req, res) => {
   try {
     const { id } = req.params;
-    const equipo = await Equipo.findByPk(id);
+    const equipo = await Equipo.findByPk(id, {
+      include: [{ model: Jugador, as: "jugadores" }], // Relación con jugadores
+    });
+
     if (!equipo) {
       return res.status(404).json({ error: "Equipo no encontrado" });
     }
