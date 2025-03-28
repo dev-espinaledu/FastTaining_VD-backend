@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config(); // Cargar variables de entorno
+const cookieParser = require("cookie-parser");
 const jugadores = require("./routes/jugadorRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
@@ -12,6 +13,8 @@ const app = express();
 
 // Middleware para parsear JSON
 app.use(express.json());
+// cookie-parser
+app.use(cookieParser());
 
 // Configuración de CORS
 app.use(
