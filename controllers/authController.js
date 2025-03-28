@@ -6,34 +6,35 @@ const { enviarCorreoRecuperacion } = require("../utils/emailService");
 
 exports.login = async (req, res) => {
   try {
-      const { email, password } = req.body;
-      const usuario = await Usuario.findOne({ where: { email } });
+    const { email, password } = req.body;
+    const usuario = await Usuario.findOne({ where: { email } });
 
-      if (!usuario) {
-          return res.status(404).json({ message: "Usuario no encontrado" });
-      }
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
 
-      // Verificar la contraseña
-      const passwordValida = await bcrypt.compare(password, usuario.password);
-      if (!passwordValida) {
-          return res.status(401).json({ message: "Contraseña incorrecta" });
-      }
+    // Verificar la contraseña
+    const passwordValida = await bcrypt.compare(password, usuario.password);
+    if (!passwordValida) {
+      return res.status(401).json({ message: "Contraseña incorrecta" });
+    }
 
-      // Obtener el rol correcto
-      const role = usuario.role || usuario.rol_id;  // Intenta obtener el rol de cualquiera de los dos campos
+    // Obtener el rol y el correo del usuario
+    const role = usuario.role || usuario.rol_id;
+    const correo = usuario.email;  // Usar el correo del usuario
 
-      // Generar token JWT
-      const token = jwt.sign(
-          { id: usuario.id, role },
-          process.env.JWT_SECRET || "secreto_super_seguro",
-          { expiresIn: "1h" }
-      );
+    // Generar token JWT
+    const token = jwt.sign(
+      { id: usuario.id, role },
+      process.env.JWT_SECRET || "secreto_super_seguro",
+      { expiresIn: "1h" }
+    );
 
-      res.json({ token, role });
+    res.json({ token, role, email }); // Ahora se incluye el correo del usuario en lugar del nombre
 
   } catch (error) {
-      console.error("Error en login:", error);
-      res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error en login:", error);
+    res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
