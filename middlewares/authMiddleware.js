@@ -27,10 +27,13 @@ const verificarAdmin = (req, res, next) => {
 };
 
 const verificarEntrenador = (req, res, next) => {
-  if (!req.user || req.user.role !== "entrenador") {
-    return res.status(403).json({ message: "Acceso denegado. Se requieren permisos de entrenador." });
+  const usuario = req.header('Usuario-Rol');
+  if (usuario !== 'entrenador') {
+      return res.status(403).json({ mensaje: 'Acceso denegado' });
   }
   next();
 };
+
+
 
 module.exports = { authMiddleware, verificarAdmin, verificarEntrenador };
