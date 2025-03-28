@@ -9,12 +9,12 @@ exports.verJugadores = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "usuarios", // Usa el alias definido en la relación
+          as: "usuarios", // Se mantiene el alias actual
           attributes: ["email"],
           include: [
             {
               model: Persona,
-              as: "personas", // Usa el alias definido en la relación
+              as: "personas", // Se mantiene el alias actual
               attributes: ["nombre", "apellido"],
             },
           ],
@@ -22,9 +22,10 @@ exports.verJugadores = async (req, res) => {
       ],
     });
 
+    // Ajustamos la estructura para el frontend
     const jugadores = response.map((jugador) => ({
       id: jugador.id,
-      nombre: jugador.usuarios?.personas?.nombre || "Desconocido", // Usa el alias correcto
+      nombre: jugador.usuarios?.personas?.nombre || "Desconocido",
       apellido: jugador.usuarios?.personas?.apellido || "Desconocido",
       email: jugador.usuarios?.email || "Sin correo",
       posicion: jugador.posicion,
@@ -35,9 +36,10 @@ exports.verJugadores = async (req, res) => {
     return res.json(jugadores);
   } catch (error) {
     console.error("Error al obtener jugadores:", error);
-    return res.status(500).json({ error: "Error al obtener jugadores" });
+    return res.status(500).json({ error: "Error al obtener jugadores", detalle: error.message });
   }
 };
+
 
 exports.verJugador = async (req, res) => {
   const { id } = req.params;
@@ -257,7 +259,7 @@ exports.actualizarCapacidadJugador = async (req, res) => {
 
     return res.json({
       message: "Jugador actualizado",
-      jugador: { fecha_nacimiento, posicion, altura },
+      jugador: { jugador },
     });
   } catch (error) {
     console.error(error);
