@@ -28,7 +28,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Historial',
-    tableName: 'historial_datos'
+    tableName: 'historial_datos',
+    // timestamps: true
   });
   return Historial;
 };
