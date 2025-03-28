@@ -121,6 +121,7 @@ const generarEntrenamiento = async (req, res) => {
   }
 };
 
+
 module.exports = { generarEntrenamiento };
 
 /* 
