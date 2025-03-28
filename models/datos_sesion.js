@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       });
       DatoSesion.hasMany(models.Entrenamiento, {
         foreignKey: "datos_sesion_id",
-        as: "entrenamientos",
+        as: "datosSesion",
       });
     }
   }
