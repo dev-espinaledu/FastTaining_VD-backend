@@ -1,7 +1,41 @@
-const { Usuario } = require("../models");
+const { Usuario, Token } = require("../models");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { enviarCorreoRecuperacion } = require("../utils/emailService");
+
+exports.login = async (req, res) => {
+  try {
+      const { email, password } = req.body;
+      const usuario = await Usuario.findOne({ where: { email } });
+
+      if (!usuario) {
+          return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      // Verificar la contraseña
+      const passwordValida = await bcrypt.compare(password, usuario.password);
+      if (!passwordValida) {
+          return res.status(401).json({ message: "Contraseña incorrecta" });
+      }
+
+      // Obtener el rol correcto
+      const role = usuario.role || usuario.rol_id;  // Intenta obtener el rol de cualquiera de los dos campos
+
+      // Generar token JWT
+      const token = jwt.sign(
+          { id: usuario.id, role },
+          process.env.JWT_SECRET || "secreto_super_seguro",
+          { expiresIn: "1h" }
+      );
+
+      res.json({ token, role });
+
+  } catch (error) {
+      console.error("Error en login:", error);
+      res.status(500).json({ message: "Error en el servidor" });
+  }
+};
 
 // Solicitar recuperación de contraseña
 exports.solicitarRecuperacion = async (req, res) => {
@@ -17,10 +51,13 @@ exports.solicitarRecuperacion = async (req, res) => {
     const token = crypto.randomBytes(32).toString("hex");
     const expiration = new Date(Date.now() + 3600000); // 1 hora
 
-    // Guardar token en la BD
-    usuario.reset_token = token;
-    usuario.reset_expiration = expiration;
-    await usuario.save();
+    // Crear un registro de token con usuario_id
+    await Token.create({
+      usuario_id: usuario.id,  // Asignar el id del usuario
+      reset_token: token,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     // Enviar el correo con el enlace de recuperación
     await enviarCorreoRecuperacion(email, token);
@@ -32,23 +69,43 @@ exports.solicitarRecuperacion = async (req, res) => {
   }
 };
 
+
 // Restablecer la contraseña
 exports.restablecerContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;
-    const usuario = await Usuario.findOne({ where: { reset_token: token } });
 
-    if (!usuario || usuario.reset_expiration < new Date()) {
-      return res.status(400).json({ message: "Token inválido o expirado" });
+    // Validar la nueva contraseña :v
+    if (nuevaContrasena.length < 8) {
+      return res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
     }
 
-    // Hashear la nueva contraseña
-    const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+    // Buscar el token en la base de datos
+    const tokenRecord = await Token.findOne({ where: { reset_token: token } });
 
-    // Actualizar la contraseña y limpiar el token
+    if (!tokenRecord) {
+      return res.status(400).json({ message: "Token inválido o no encontrado." });
+    }
+
+    // Verificar si el token ha expirado
+    if (new Date() > tokenRecord.reset_expiration) {
+      return res.status(400).json({ message: "Token expirado." });
+    }
+
+    // Buscar al usuario asociado al token
+    const usuario = await Usuario.findByPk(tokenRecord.usuario_id);
+
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
     usuario.password = hashedPassword;
-    usuario.reset_token = null;
-    usuario.reset_expiration = null;
+
+    // Eliminar el token utilizado
+    await Token.destroy({ where: { reset_token: token } });
+
     await usuario.save();
 
     return res.json({ message: "Contraseña actualizada exitosamente" });
