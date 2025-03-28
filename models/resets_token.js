@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Token.init(
     {
-      usuarios_id: DataTypes.SMALLINT,
+      usuario_id: DataTypes.SMALLINT,
       reset_token:DataTypes.STRING
     },
     {
