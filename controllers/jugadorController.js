@@ -9,12 +9,12 @@ const verJugadores = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "usuarios",
+          as: "usuarios", // Usa el alias definido en la relación
           attributes: ["email"],
           include: [
             {
               model: Persona,
-              as: "personas",
+              as: "personas", // Usa el alias definido en la relación
               attributes: ["nombre", "apellido"],
             },
           ],
@@ -39,7 +39,7 @@ const verJugadores = async (req, res) => {
   }
 };
 
-exports.verJugador = async (req, res) => {
+const verJugador = async (req, res) => {
   const { id } = req.params;
   try {
     const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
@@ -71,7 +71,7 @@ const crearJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    potencia_muscular_pie,
+    fuerza,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -111,7 +111,7 @@ const crearJugador = async (req, res) => {
         email,
         password,
         persona_id: persona.id,
-        rol_id: 3,
+        rol_id: 3, // Suponiendo que "3" es el rol de jugador
       },
       { transaction: t },
     );
@@ -126,13 +126,13 @@ const crearJugador = async (req, res) => {
         porcentaje_grasa_corporal,
         porcentaje_masa_muscular,
         tipo_cuerpo,
-        potencia_muscular_pie,
+        fuerza,
         velocidad_max,
         resistencia_aerobica,
         resistencia_anaerobica,
         flexibilidad,
         equipo_id,
-        usuario_id: usuario.id,
+        usuario_id: usuario.id, // Asociar con el usuario recién creado
       },
       { transaction: t },
     );
@@ -175,7 +175,7 @@ const actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      potencia_muscular_pie,
+      fuerza,
       velocidad,
       potencia,
       equipo_id,
@@ -207,7 +207,7 @@ const actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      potencia_muscular_pie,
+      fuerza,
       velocidad,
       potencia,
       equipo_id,
@@ -230,7 +230,7 @@ const actualizarCapacidadJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    potencia_muscular_pie,
+    fuerza,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -248,7 +248,7 @@ const actualizarCapacidadJugador = async (req, res) => {
       porcentaje_grasa_corporal,
       porcentaje_masa_muscular,
       tipo_cuerpo,
-      potencia_muscular_pie,
+      fuerza,
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,
@@ -284,47 +284,43 @@ const verPerfil = async (req, res) => {
       where: { usuario_id: usuarioId },
       include: [{
         model: Usuario,
-        as: "usuarios",
+        as: "usuarios", // Usa el alias definido en la asociación
         include: [{
           model: Persona,
-          as: "personas"
+          as: "personas" // Usa el alias definido en la asociación
         }]
       }]
     });
 
     if (!jugador) {
-      return res.status(404).json({ 
-        success: false,
-        message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND"
-      });
+      return res.status(404).json({ error: "Perfil no encontrado" });
     }
 
     // Verificar campos obligatorios
-    const perfilCompleto = jugador.usuarios.personas.nombre && 
-                          jugador.usuarios.personas.apellido && 
-                          jugador.usuarios.personas.telefono &&
-                          jugador.fecha_nacimiento;
+    const camposObligatorios = {
+      nombre: jugador.usuarios?.personas?.nombre, // Acceso con alias
+      apellido: jugador.usuarios?.personas?.apellido,
+      telefono: jugador.usuarios?.personas?.telefono,
+      fecha_nacimiento: jugador.fecha_nacimiento
+    };
 
-    return res.json({
-      success: true,
-      perfilCompleto,
-      datos: {
-        nombre: jugador.usuarios.personas.nombre,
-        apellido: jugador.usuarios.personas.apellido,
-        telefono: jugador.usuarios.personas.telefono,
-        fecha_nacimiento: jugador.fecha_nacimiento
-      }
-    });
+    const faltantes = Object.entries(camposObligatorios)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
 
+    if (faltantes.length > 0) {
+      return res.json({
+        perfilCompleto: false,
+        camposFaltantes: faltantes,
+        datos: camposObligatorios
+      });
+    }
+
+    return res.json({ perfilCompleto: true });
+    
   } catch (error) {
     console.error("Error al ver perfil:", error);
-    return res.status(500).json({ 
-      success: false,
-      message: "Error al obtener perfil",
-      code: "FETCH_PROFILE_ERROR",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    res.status(500).json({ error: "Error al obtener perfil" });
   }
 };
 
@@ -332,8 +328,6 @@ const actualizarPerfil = async (req, res) => {
   try {
     const usuarioId = req.user.id;
     const { nombre, apellido, telefono, fecha_nacimiento } = req.body;
-
-    // Validaciones básicas...
     
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
