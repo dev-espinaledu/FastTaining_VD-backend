@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const {
-  generarEntrenamientoIndividual,
+  generarEntrenamiento,
   verEntrenamientoIndividual,
-  verEntrenamiento,
+  verEntrenamientos,
 } = require("../controllers/sesionEntrenamientoController");
 
-router.post("/entrenamiento/crear/:id", generarEntrenamientoIndividual);
+router.post("/entrenamiento/crear/:id", generarEntrenamiento);
 router.get("/entrenamiento/ver/:id", verEntrenamientoIndividual);
-router.get("/entrenamiento/", verEntrenamiento);
+router.get("/entrenamiento/", verEntrenamientos);
 
 module.exports = router;

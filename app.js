@@ -35,5 +35,5 @@ app.use("/api", entrenamientoRoutes);
 app.use("/api", datosSesion);
 
 app.listen(5000, () => {
-  console.log("Servidor en puerto 5000");
+  console.log("Servidor en puerto 3000");
 });
