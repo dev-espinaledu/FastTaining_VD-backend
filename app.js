@@ -8,7 +8,6 @@ const datosSesion = require("./routes/datosEntrenamientoRoutes");
 const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
-const sesionesRoutes = require("./routes/sesionesRoutes");
 const app = express();
 
 // Middleware para parsear JSON
@@ -25,12 +24,10 @@ app.use(
 
 // Definir prefijo para las rutas
 app.use("/api/auth", authRoutes);
-app.use("/api", usuarios);
 app.use("/api", jugadores);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
-app.use("/api", calendarioRoutes);
 
 
 // Iniciar el servidor
