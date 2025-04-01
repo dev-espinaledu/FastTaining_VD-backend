@@ -154,7 +154,7 @@ const obtenerEstadisticasEquipo = (req, res) => {
 
 module.exports = {
   obtenerEstadisticasJugador,
-  agregarDatosEstadisticas,
+  agregarDatosEstadisticasJugador,
   generarFechas,
   obtenerEstadisticasEquipo,
 };

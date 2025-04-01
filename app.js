@@ -39,5 +39,5 @@ app.use("/api", estadisticasRoutes);
 // ✅ Iniciar servidor en el puerto correcto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🔥 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT} ⚽️`);
 });
