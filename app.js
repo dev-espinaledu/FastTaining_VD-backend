@@ -8,6 +8,7 @@ const datosSesion = require("./routes/datosEntrenamientoRoutes");
 const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
+const sesionesRoutes = require("./routes/sesionesRoutes");
 const app = express();
 
 // Middleware para parsear JSON
@@ -24,13 +25,16 @@ app.use(
 
 // Definir prefijo para las rutas
 app.use("/api/auth", authRoutes);
+app.use("/api", usuarios);
 app.use("/api", jugadores);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
-app.use("/api", entrenamientoRoutes);
-app.use("/api", datosSesion);
+app.use("/api", calendarioRoutes);
 
-app.listen(5000, () => {
-  console.log("Servidor en puerto 3000");
+
+// Iniciar el servidor
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor en puerto ${PORT}`);
 });

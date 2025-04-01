@@ -1,4 +1,5 @@
 const { Entrenador, Persona, Usuario, sequelize } = require("../models"); // Agregar sequelize para transacciones
+const { Entrenador, Persona, Usuario, sequelize } = require("../models"); // Agregar sequelize para transacciones
 const bcrypt = require("bcrypt");
 
 const verEntrenadores = async (req, res) => {
@@ -109,4 +110,5 @@ const actualizarEntrenador = async (req, res) => {
   }
 };
 
-module.exports = { verEntrenadores, crearEntrenador, verEntrenador };
+
+module.exports = { verEntrenadores, crearEntrenador, verEntrenador, actualizarEntrenador };

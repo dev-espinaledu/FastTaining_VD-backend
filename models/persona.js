@@ -17,6 +17,12 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       });
+      this.hasOne(models.Jugador, {
+        foreignKey: "id",
+        as: "jugador",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      });
     }
   }
   Persona.init(
