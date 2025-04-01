@@ -51,7 +51,7 @@ const authMiddleware = (req, res, next) => {
     // Manejo detallado de errores
     let message = "Token inválido";
     let code = "INVALID_TOKEN";
-    
+
     if (error.name === "TokenExpiredError") {
       message = "Token expirado";
       code = "TOKEN_EXPIRED";
@@ -60,11 +60,12 @@ const authMiddleware = (req, res, next) => {
       code = "MALFORMED_TOKEN";
     }
 
-    res.status(401).json({ 
+    res.status(401).json({
       success: false,
       message,
       code,
-      details: process.env.NODE_ENV === "development" ? error.message : undefined
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

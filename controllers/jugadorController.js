@@ -22,9 +22,10 @@ const verJugadores = async (req, res) => {
       ],
     });
 
+    // Ajustamos la estructura para el frontend
     const jugadores = response.map((jugador) => ({
       id: jugador.id,
-      nombre: jugador.usuarios?.personas?.nombre || "Desconocido", // Usa el alias correcto
+      nombre: jugador.usuarios?.personas?.nombre || "Desconocido",
       apellido: jugador.usuarios?.personas?.apellido || "Desconocido",
       email: jugador.usuarios?.email || "Sin correo",
       posicion: jugador.posicion,
@@ -35,7 +36,9 @@ const verJugadores = async (req, res) => {
     return res.json(jugadores);
   } catch (error) {
     console.error("Error al obtener jugadores:", error);
-    return res.status(500).json({ error: "Error al obtener jugadores" });
+    return res
+      .status(500)
+      .json({ error: "Error al obtener jugadores", detalle: error.message });
   }
 };
 
@@ -279,48 +282,56 @@ const eliminarJugador = async (req, res) => {
 const verPerfil = async (req, res) => {
   try {
     const usuarioId = req.user.id;
-    
+
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
-      include: [{
-        model: Usuario,
-        as: "usuarios", // Usa el alias definido en la asociación
-        include: [{
-          model: Persona,
-          as: "personas" // Usa el alias definido en la asociación
-        }]
-      }]
+      include: [
+        {
+          model: Usuario,
+          as: "usuarios",
+          include: [
+            {
+              model: Persona,
+              as: "personas",
+            },
+          ],
+        },
+      ],
     });
 
     if (!jugador) {
-      return res.status(404).json({ error: "Perfil no encontrado" });
-    }
-
-    // Verificar campos obligatorios
-    const camposObligatorios = {
-      nombre: jugador.usuarios?.personas?.nombre, // Acceso con alias
-      apellido: jugador.usuarios?.personas?.apellido,
-      telefono: jugador.usuarios?.personas?.telefono,
-      fecha_nacimiento: jugador.fecha_nacimiento
-    };
-
-    const faltantes = Object.entries(camposObligatorios)
-      .filter(([_, value]) => !value)
-      .map(([key]) => key);
-
-    if (faltantes.length > 0) {
-      return res.json({
-        perfilCompleto: false,
-        camposFaltantes: faltantes,
-        datos: camposObligatorios
+      return res.status(404).json({
+        success: false,
+        message: "Perfil no encontrado",
+        code: "PROFILE_NOT_FOUND",
       });
     }
 
-    return res.json({ perfilCompleto: true });
-    
+    // Verificar campos obligatorios
+    const perfilCompleto =
+      jugador.usuarios.personas.nombre &&
+      jugador.usuarios.personas.apellido &&
+      jugador.usuarios.personas.telefono &&
+      jugador.fecha_nacimiento;
+
+    return res.json({
+      success: true,
+      perfilCompleto,
+      datos: {
+        nombre: jugador.usuarios.personas.nombre,
+        apellido: jugador.usuarios.personas.apellido,
+        telefono: jugador.usuarios.personas.telefono,
+        fecha_nacimiento: jugador.fecha_nacimiento,
+      },
+    });
   } catch (error) {
     console.error("Error al ver perfil:", error);
-    res.status(500).json({ error: "Error al obtener perfil" });
+    return res.status(500).json({
+      success: false,
+      message: "Error al obtener perfil",
+      code: "FETCH_PROFILE_ERROR",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -328,17 +339,20 @@ const actualizarPerfil = async (req, res) => {
   try {
     const usuarioId = req.user.id;
     const { nombre, apellido, telefono, fecha_nacimiento } = req.body;
-    
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
-      include: [{
-        model: Usuario,
-        as: "usuarios",
-        include: [{
-          model: Persona,
-          as: "personas"
-        }]
-      }]
+      include: [
+        {
+          model: Usuario,
+          as: "usuarios",
+          include: [
+            {
+              model: Persona,
+              as: "personas",
+            },
+          ],
+        },
+      ],
     });
 
     // Actualizar datos
@@ -346,11 +360,19 @@ const actualizarPerfil = async (req, res) => {
     if (fecha_nacimiento) await jugador.update({ fecha_nacimiento });
 
     res.json({ message: "Perfil actualizado correctamente" });
-
   } catch (error) {
     console.error("Error al actualizar perfil:", error);
     res.status(500).json({ error: "Error al actualizar perfil" });
   }
 };
 
-module.exports = { verJugadores, verJugador, crearJugador, actualizarJugador, eliminarJugador, actualizarCapacidadJugador, verPerfil, actualizarPerfil };
+module.exports = {
+  verJugadores,
+  verJugador,
+  crearJugador,
+  actualizarJugador,
+  eliminarJugador,
+  actualizarCapacidadJugador,
+  verPerfil,
+  actualizarPerfil,
+};
