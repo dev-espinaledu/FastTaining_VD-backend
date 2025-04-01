@@ -42,7 +42,7 @@ const verJugadores = async (req, res) => {
   }
 };
 
-exports.verJugador = async (req, res) => {
+const verJugador = async (req, res) => {
   const { id } = req.params;
   try {
     const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
@@ -82,14 +82,7 @@ const crearJugador = async (req, res) => {
   } = req.body;
   try {
     // Validaciones básicas
-    if (
-      !nombre ||
-      !apellido ||
-      !email ||
-      !pass ||
-      !fecha_nacimiento ||
-      !posicion
-    ) {
+    if (!email || !pass) {
       return res.status(400).json({ error: "Faltan datos obligatorios" });
     }
 
