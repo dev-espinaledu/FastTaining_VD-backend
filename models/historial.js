@@ -14,16 +14,15 @@ module.exports = (sequelize, DataTypes) => {
 
 }
   Historial.init({
-    jugador_id: DataTypes.STRING,
     fecha_registro: DataTypes.DATE,
-    altura: DataTypes.SMALLINT,
-    peso: DataTypes.SMALLINT,
+    altura: DataTypes.DOUBLE,
+    peso: DataTypes.DOUBLE,
     porcentaje_grasa_corporal:DataTypes.DOUBLE,
     porcentaje_masa_muscular:DataTypes.DOUBLE,
-    fuerza:DataTypes.SMALLINT,
-    velocidad_max:DataTypes.SMALLINT,
-    resistencia_aerobica:DataTypes.SMALLINT,
-    resistencia_anaerobica:DataTypes.SMALLINT,
+    fuerza:DataTypes.DOUBLE,
+    velocidad_max:DataTypes.DOUBLE,
+    resistencia_aerobica:DataTypes.DOUBLE,
+    resistencia_anaerobica:DataTypes.DOUBLE,
     flexibilidad: DataTypes.DOUBLE,
   }, {
     sequelize,

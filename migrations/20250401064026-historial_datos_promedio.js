@@ -1,67 +1,57 @@
-"use strict";
+'use strict';
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("jugadores", {
+  async up (queryInterface, Sequelize) {
+    await queryInterface.createTable("promedio_datos", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.SMALLINT,
       },
-      usuario_id:{
-        type:Sequelize.SMALLINT,
-        allowNull: false,
-        references:{model:"usuarios", key:"id"},
-      },
       equipo_id:{
         type:Sequelize.SMALLINT,
         allowNull: false,
         references:{model:"equipos", key:"id"},        
       },
-      fecha_nacimiento: {
-        type: Sequelize.DATE,
+      fecha_registro:{
+        allowNull:true,
+        type: Sequelize.DATE
       },
-      altura: {
+      altura_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
-      peso: {
-        type: Sequelize.DOUBLE,
-        allowNull:true
-      },
-      posicion: {
-        type: Sequelize.ENUM("delantero", "mediocampista", "defensa", "arquero"),
-      },
-      porcentaje_grasa_corporal: {
-        type: Sequelize.DOUBLE,
-        allowNull:true
-      },
-      porcentaje_masa_muscular: {
-        type: Sequelize.DOUBLE,
-        allowNull:true
-      }, 
-      tipo_cuerpo: {
+      peso_prom: {
         type: Sequelize.STRING,
         allowNull:true
       },
-      potencia_muscular_pierna: {
+      grasa_corporal_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
-      velocidad_max: {
+      masa_muscular_prom: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      }, 
+      potencia_muscular_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
-      resistencia_aerobica: {
+      velocidad_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
-      resistencia_anaerobica: {
+      resistencia_aerobica_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
-      flexibilidad: {
+      resistencia_anaerobica_prom: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      },
+      flexibilidad_prom: {
         type: Sequelize.DOUBLE,
       },
       createdAt: {
@@ -75,6 +65,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("jugadores");
+    await queryInterface.dropTable("promedio_datos");
   },
 };

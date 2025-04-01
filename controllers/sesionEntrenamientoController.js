@@ -1,25 +1,23 @@
-const {DatoSesion, Entrenamiento, Jugador} = require("../models");
-/* const Openai = require("../api/openia");
-const axios = require("axios");
- */
+const {DatoSesion, Entrenamiento, Equipo} = require("../models");
+
 require("dotenv").config();
 
-const generarEntrenamientoIndividual = async (req, res) => {
+const generarEntrenamiento = async (req, res) => {
   const { id } = req.params;
 
   try {
     // Obtener la sesión con el jugador asociado
     const sesion = await DatoSesion.findByPk(id, {
-      include: [{ model: Jugador, as: "jugadores" }],
+      include: [{ model: Equipo, as: "datos_sesions" }],
     });
 
     if (!sesion) {
       return res.status(404).json({ error: "Sesión no encontrada" });
     }
 
-    const jugador = sesion.jugadores;
-    if (!jugador) {
-      return res.status(404).json({ error: "Jugador no encontrado en la sesión" });
+    const equipo = sesion.datos_sesions;
+    if (!equipo) {
+      return res.status(404).json({ error: "Equipo no encontrado en la sesión" });
     }
 
     console.log("API Key:", process.env.OPENROUTE_API_KEY);
@@ -31,20 +29,19 @@ const generarEntrenamientoIndividual = async (req, res) => {
         { role: "system", content: "Eres un experto en entrenamiento de fútbol." },
         {
           role: "user",
-          content: `Genera una sesión de entrenamiento para un jugador con objetivo ${sesion.objetivo} y estas características:
-          - Fecha de nacimiento: ${jugador.fechaNacimiento}
-          - Altura: ${jugador.altura} cm
-          - Peso: ${jugador.peso} kg
-          - Posición: ${jugador.posicion}
-          - Grasa corporal: ${jugador.porcentaje_grasa_corporal}%
-          - Masa muscular: ${jugador.porcentaje_masa_muscular}%
-          - Tipo de cuerpo: ${jugador.tipo_cuerpo}
-          - Fuerza: ${jugador.fuerza}
-          - Velocidad máxima (30m): ${jugador.velocidad} s
-          - Resistencia: ${jugador.resistencia} ml/kg/min
-          - Resistencia aeróbica: ${jugador.resistencia_aerobica} ml/kg/min
-          - Resistencia anaeróbica (300m): ${jugador.resistencia_anaerobica} s
-          - Flexibilidad: ${jugador.flexibilidad} cm
+          content: `Genera una sesión de entrenamiento para un jugador con objetivo ${sesion.objetivo}teniendo en cuenta estas características:
+          - Categoria: ${equipo.categoria}
+          - Altura: ${sesion.altura} cm
+          - Peso: ${sesion.peso} kg
+          - Posición en la cancha: ${sesion.posicion}
+          - Grasa corporal: ${sesion.porcentaje_grasa_corporal}%
+          - Masa muscular: ${sesion.porcentaje_masa_muscular}%
+          - Potencia muscular en piernas: ${sesion.potencia_mucular_pierna}
+          - Velocidad máxima (30m): ${sesion.velocidad} s
+          - Resistencia: ${sesion.resistencia} ml/kg/min
+          - Resistencia aeróbica: ${sesion.resistencia_aerobica} ml/kg/min
+          - Resistencia anaeróbica (300m): ${sesion.resistencia_anaerobica} s
+          - Flexibilidad: ${sesion.flexibilidad} cm
 
           Devuelve un entrenamiento estructurado en tres fases:
           1. *Fase Inicial*: Ejercicios de calentamiento.
@@ -60,7 +57,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
         }
       ],
       temperature: 0.7,
-      max_tokens: 300,
+      max_tokens: 600,
     };
 
     // Llamada a la API de OpenRouter
@@ -123,12 +120,11 @@ const verEntrenamientoIndividual = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Buscar el entrenamiento en la base de datos con datos de entrenamiento incluidos
     const entrenamiento = await Entrenamiento.findByPk(id, {
       include: [{
         model: DatoSesion,
         as: "datosSesion",
-        attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
+        attributes: ["fecha", "objetivo"], 
       }],
     });
 
@@ -168,40 +164,41 @@ const verEntrenamientoIndividual = async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
-
-const verEntrenamiento = async (req, res) => {
+//-----------------------------------------------
+const verEntrenamientos = async (req, res) => {
   try {
-    // Buscar todos los entrenamientos junto con sus datos de sesión
+    console.log("Está accediendo a la funcionalidad de VerEntrenamiento")
     const entrenamientos = await Entrenamiento.findAll({
       include: [{
         model: DatoSesion,
         as: "datosSesion",
-        attributes: ["fecha", "objetivo"], // Asegura que se obtienen estos campos
+        attributes: ["fecha", "objetivo"], 
       }],
     });
 
-    // Si no hay entrenamientos, devolver un mensaje adecuado
     if (entrenamientos.length === 0) {
       return res.status(404).json({ error: "No hay entrenamientos disponibles" });
     }
 
-    // Formatear cada entrenamiento
+    console.log("2")
+
     const entrenamientosFormateados = entrenamientos.map(entrenamiento => {
-      const datos = entrenamiento.datosSesion || {}; // Evita errores si datosSesion es null
+      const datos = entrenamiento.datosSesion;
 
       return {
-        id: entrenamiento.id,
         fecha: datos.fecha || "Fecha no disponible",
         objetivo: datos.objetivo || "Objetivo no disponible",
-        fases: {
-          fase_inicial: entrenamiento.fase_inicial || [],
-          fase_central: entrenamiento.fase_central || [],
-          fase_final: entrenamiento.fase_final || [],
-        },
+        fase_inicial: entrenamiento.fase_inicial || [],
+        fase_central: entrenamiento.fase_central || [],
+        fase_final: entrenamiento.fase_final || [],
+    
       };
     });
+    console.log("3")
 
     res.json(entrenamientosFormateados);
+    console.log("4")
+    console.log(entrenamientosFormateados)
 
   } catch (error) {
     console.error("Error obteniendo los entrenamientos:", error);
@@ -211,4 +208,4 @@ const verEntrenamiento = async (req, res) => {
 
 
 
-module.exports = { generarEntrenamientoIndividual, verEntrenamiento, verEntrenamientoIndividual};
+module.exports = { generarEntrenamiento, verEntrenamientos, verEntrenamientoIndividual};
