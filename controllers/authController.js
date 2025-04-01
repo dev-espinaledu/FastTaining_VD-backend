@@ -1,182 +1,121 @@
-const { Usuario, Token, Persona } = require("../models");
+const { Usuario, Token } = require("../models");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { Op } = require("sequelize"); // Added missing import
 const { enviarCorreoRecuperacion } = require("../utils/emailService");
-
-// Mapeo de roles
-const roleMap = {
-  1: "admin",
-  2: "entrenador",
-  3: "jugador"
-};
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Buscar usuario con su información de persona
-    const usuario = await Usuario.findOne({ 
-      where: { email },
-      include: [
-        { 
-          model: Persona,
-          as: 'personas',
-          attributes: ['nombre', 'apellido', 'telefono']
-        }
-      ],
-      attributes: ['id', 'email', 'password', 'rol_id']
-    });
+    const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
-      return res.status(404).json({ 
-        success: false,
-        message: "Usuario no encontrado",
-        code: "USER_NOT_FOUND"
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Verificar contraseña con mínimo 8 caracteres, una mayúscula, un número y un símbolo especial
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
       });
     }
 
-    // Verificar contraseña
-    const passwordMatch = await bcrypt.compare(password, usuario.password);
-    if (!passwordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Credenciales inválidas",
-        code: "INVALID_CREDENTIALS"
-      });
-    }
+    // Obtener el rol y el correo del usuario
+    const role = usuario.role || usuario.rol_id;
+    const correo = usuario.email;  // Usar el correo del usuario
 
     // Generar token JWT
     const token = jwt.sign(
-      {
-        id: usuario.id,
-        role: usuario.rol_id,
-        roleName: roleMap[usuario.rol_id]
-      },
-      process.env.JWT_SECRET || "secreto_super_seguro", // Should be properly configured in production
+      { id: usuario.id, role },
+      process.env.JWT_SECRET || "secreto_super_seguro",
       { expiresIn: "1h" }
     );
 
-    // Respuesta estructurada
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: usuario.id,
-        email: usuario.email,
-        role: usuario.rol_id,
-        roleName: roleMap[usuario.rol_id],
-        persona: usuario.persona // Now matches the association alias
-      }
-    });
+    res.json({ token, role, email }); // Ahora se incluye el correo del usuario en lugar del nombre
 
   } catch (error) {
     console.error("Error en login:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Error en el servidor",
-      code: "SERVER_ERROR",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
-    });
+    res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
+// Solicitar recuperación de contraseña
 exports.solicitarRecuperacion = async (req, res) => {
   try {
     const { email } = req.body;
     const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
-      return res.status(404).json({ 
-        success: false,
-        message: "Usuario no encontrado",
-        code: "USER_NOT_FOUND"
-      });
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Generar token de recuperación
+    // Generar token único y establecer expiración (1 hora)
     const token = crypto.randomBytes(32).toString("hex");
     const expiration = new Date(Date.now() + 3600000); // 1 hora
 
+    // Crear un registro de token con usuario_id
     await Token.create({
-      usuario_id: usuario.id,
+      usuario_id: usuario.id,  // Asignar el id del usuario
       reset_token: token,
-      reset_expiration: expiration
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
-    // Enviar correo
+    // Enviar el correo con el enlace de recuperación
     await enviarCorreoRecuperacion(email, token);
 
-    res.json({ 
-      success: true,
-      message: "Correo de recuperación enviado" 
-    });
-
+    return res.json({ message: "Correo de recuperación enviado." });
   } catch (error) {
     console.error("Error en solicitud de recuperación:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error en el servidor",
-      code: "SERVER_ERROR"
-    });
+    return res.status(500).json({ message: "Error en el servidor" });
   }
 };
 
+// Restablecer la contraseña
 exports.restablecerContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;
 
-    // Validar formato de contraseña
+    // Validar la nueva contraseña con mínimo 8 caracteres, una mayúscula, un número y un símbolo especial
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(nuevaContrasena)) {
       return res.status(400).json({
-        success: false,
         message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
-        code: "INVALID_PASSWORD_FORMAT"
       });
     }
 
-    // Buscar token válido (sin verificar expiración)
-    const tokenRecord = await Token.findOne({ 
-      where: { 
-        reset_token: token
-      }
-    });
+    // Buscar el token en la base de datos
+    const tokenRecord = await Token.findOne({ where: { reset_token: token } });
 
     if (!tokenRecord) {
-      return res.status(400).json({
-        success: false,
-        message: "Token inválido",
-        code: "INVALID_TOKEN"
-      });
+      return res.status(400).json({ message: "Token inválido o no encontrado." });
     }
 
-    // Actualizar contraseña
+    // Verificar si el token ha expirado
+    if (new Date() > tokenRecord.reset_expiration) {
+      return res.status(400).json({ message: "Token expirado." });
+    }
+
+    // Buscar al usuario asociado al token
     const usuario = await Usuario.findByPk(tokenRecord.usuario_id);
+
     if (!usuario) {
-      return res.status(404).json({
-        success: false,
-        message: "Usuario no encontrado",
-        code: "USER_NOT_FOUND"
-      });
+      return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
+    // Encriptar la nueva contraseña
     const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
-    await usuario.update({ password: hashedPassword });
+    usuario.password = hashedPassword;
+
+    // Eliminar el token utilizado
     await Token.destroy({ where: { reset_token: token } });
 
-    res.json({
-      success: true,
-      message: "Contraseña actualizada exitosamente"
-    });
+    await usuario.save();
 
+    return res.json({ message: "Contraseña actualizada exitosamente" });
   } catch (error) {
     console.error("Error al restablecer contraseña:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error en el servidor",
-      code: "SERVER_ERROR"
-    });
+    return res.status(500).json({ message: "Error en el servidor" });
   }
 };

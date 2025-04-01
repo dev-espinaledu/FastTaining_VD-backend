@@ -23,27 +23,10 @@ router.put("/entrenador/perfil",
   validateImage,
   entrenadorController.actualizarPerfil
 );
-
-// 🔹 Operaciones CRUD para administradores (sobre otros entrenadores)
-router.post("/entrenador/crear", 
-  authMiddleware, 
-  verificarAdmin, 
-  entrenadorController.crearEntrenador
-);
-
-router.get("/entrenador/:id", 
-  authMiddleware, 
-  verificarUsuarioOAdmin,
-  entrenadorController.verEntrenador
-);
-
-router.put("/entrenador/:id", 
-  authMiddleware, 
-  verificarUsuarioOAdmin,
-  entrenadorController.actualizarEntrenador
-);
-
-// 🔹 Listado público (sin autenticación)
-router.get("/entrenadores/ver", entrenadorController.verEntrenadores);
-
+router.get("/entrenador/:id", entrenadorController.verEntrenador);
 module.exports = router;
+
+// http://localhost:5000/api/entrenador/ver <- Ruta para mostrar datos de entrenador
+// http://localhost:5000/api/entrenador/crear <- Ruta para crear un entrenador
+// http://localhost:5000/api/entrenador/1 <- Ruta para actualizar datos de entrenador
+// http://localhost:5000/api/entrenador/1 <- Ruta para mostrar datos de  un entrenador

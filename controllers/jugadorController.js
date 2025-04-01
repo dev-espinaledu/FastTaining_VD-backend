@@ -39,7 +39,7 @@ const verJugadores = async (req, res) => {
   }
 };
 
-const verJugador = async (req, res) => {
+exports.verJugador = async (req, res) => {
   const { id } = req.params;
   try {
     const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
