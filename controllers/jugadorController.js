@@ -9,12 +9,12 @@ const verJugadores = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "usuarios",
+          as: "usuarios", // Usa el alias definido en la relación
           attributes: ["email"],
           include: [
             {
               model: Persona,
-              as: "personas",
+              as: "personas", // Usa el alias definido en la relación
               attributes: ["nombre", "apellido"],
             },
           ],
@@ -74,7 +74,7 @@ const crearJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    potencia_muscular_pie,
+    potencia_muscular_pierna,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -107,7 +107,7 @@ const crearJugador = async (req, res) => {
         email,
         password,
         persona_id: persona.id,
-        rol_id: 3,
+        rol_id: 3, // Suponiendo que "3" es el rol de jugador
       },
       { transaction: t },
     );
@@ -122,13 +122,13 @@ const crearJugador = async (req, res) => {
         porcentaje_grasa_corporal,
         porcentaje_masa_muscular,
         tipo_cuerpo,
-        potencia_muscular_pie,
+        potencia_muscular_pierna,
         velocidad_max,
         resistencia_aerobica,
         resistencia_anaerobica,
         flexibilidad,
         equipo_id,
-        usuario_id: usuario.id,
+        usuario_id: usuario.id, // Asociar con el usuario recién creado
       },
       { transaction: t },
     );
@@ -171,7 +171,7 @@ const actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      potencia_muscular_pie,
+      potencia_muscular_pierna,
       velocidad,
       potencia,
       equipo_id,
@@ -203,7 +203,7 @@ const actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      potencia_muscular_pie,
+      potencia_muscular_pierna,
       velocidad,
       potencia,
       equipo_id,
@@ -226,7 +226,7 @@ const actualizarCapacidadJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    potencia_muscular_pie,
+    potencia_muscular_pierna,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -244,7 +244,7 @@ const actualizarCapacidadJugador = async (req, res) => {
       porcentaje_grasa_corporal,
       porcentaje_masa_muscular,
       tipo_cuerpo,
-      potencia_muscular_pie,
+      potencia_muscular_pierna,
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,
@@ -286,13 +286,14 @@ const verPerfil = async (req, res) => {
             {
               model: Persona,
               as: "personas",
+              attributes: ["nombre", "apellido", "telefono"],
             },
           ],
         },
       ],
     });
 
-    if (!jugador) {
+    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
       return res.status(404).json({
         success: false,
         message: "Perfil no encontrado",
@@ -300,22 +301,15 @@ const verPerfil = async (req, res) => {
       });
     }
 
-    // Verificar campos obligatorios
-    const perfilCompleto =
-      jugador.usuarios.personas.nombre &&
-      jugador.usuarios.personas.apellido &&
-      jugador.usuarios.personas.telefono &&
-      jugador.fecha_nacimiento;
+    const { nombre, apellido, telefono } = jugador.usuarios.personas;
+    const { fecha_nacimiento } = jugador;
+
+    const perfilCompleto = nombre && apellido && telefono && fecha_nacimiento;
 
     return res.json({
       success: true,
       perfilCompleto,
-      datos: {
-        nombre: jugador.usuarios.personas.nombre,
-        apellido: jugador.usuarios.personas.apellido,
-        telefono: jugador.usuarios.personas.telefono,
-        fecha_nacimiento: jugador.fecha_nacimiento,
-      },
+      datos: { nombre, apellido, telefono, fecha_nacimiento },
     });
   } catch (error) {
     console.error("Error al ver perfil:", error);
@@ -329,11 +323,10 @@ const verPerfil = async (req, res) => {
 };
 
 const actualizarPerfil = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const usuarioId = req.user.id;
     const { nombre, apellido, telefono, fecha_nacimiento } = req.body;
-
-    // Validaciones básicas...
 
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
@@ -349,16 +342,40 @@ const actualizarPerfil = async (req, res) => {
           ],
         },
       ],
+      transaction: t,
     });
 
-    // Actualizar datos
-    await jugador.usuarios.personas.update({ nombre, apellido, telefono });
-    if (fecha_nacimiento) await jugador.update({ fecha_nacimiento });
+    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Perfil no encontrado",
+        code: "PROFILE_NOT_FOUND",
+      });
+    }
 
-    res.json({ message: "Perfil actualizado correctamente" });
+    // Actualizar datos en Persona
+    await jugador.usuarios.personas.update(
+      { nombre, apellido, telefono },
+      { transaction: t }
+    );
+
+    // Actualizar fecha de nacimiento en Jugador
+    if (fecha_nacimiento) {
+      await jugador.update({ fecha_nacimiento }, { transaction: t });
+    }
+
+    await t.commit();
+    return res.json({ success: true, message: "Perfil actualizado correctamente" });
   } catch (error) {
+    await t.rollback();
     console.error("Error al actualizar perfil:", error);
-    res.status(500).json({ error: "Error al actualizar perfil" });
+    return res.status(500).json({
+      success: false,
+      message: "Error al actualizar perfil",
+      code: "PROFILE_UPDATE_ERROR",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 

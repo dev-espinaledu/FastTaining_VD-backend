@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       });
       Entrenador.belongsTo(models.Usuario, {
         foreignKey: "usuario_id",
-        as: "usuario",
+        as: "usuarios",
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       });
