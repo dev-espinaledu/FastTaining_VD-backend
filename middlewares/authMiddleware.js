@@ -9,11 +9,9 @@ const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
 
   if (!token || !token.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({
-        message: "Acceso denegado, token no proporcionado o mal formado",
-      });
+    return res.status(401).json({
+      message: "Acceso denegado, token no proporcionado o mal formado",
+    });
   }
 
   try {
@@ -21,18 +19,34 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded; // Aquí asignamos los datos del usuario decodificado
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Token inválido o expirado" });
+    // Manejo detallado de errores
+    let message = "Token inválido";
+    let code = "INVALID_TOKEN";
+
+    if (error.name === "TokenExpiredError") {
+      message = "Token expirado";
+      code = "TOKEN_EXPIRED";
+    } else if (error.name === "JsonWebTokenError") {
+      message = "Token malformado";
+      code = "MALFORMED_TOKEN";
+    }
+
+    res.status(401).json({
+      success: false,
+      message,
+      code,
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
 // Middleware para verificar si el usuario tiene rol de administrador
 const verificarAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "administrador") {
-    return res
-      .status(403)
-      .json({
-        message: "Acceso denegado. Se requieren permisos de administrador.",
-      });
+    return res.status(403).json({
+      message: "Acceso denegado. Se requieren permisos de administrador.",
+    });
   }
   next();
 };

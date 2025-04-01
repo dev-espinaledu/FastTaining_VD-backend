@@ -10,8 +10,12 @@ const verEntrenadores = async (req, res) => {
       ],
     });
     res.json(entrenadores);
-  } catch (e) {
-    res.status(500).json({ error: "Error al obtener entrenadores" });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener entrenadores",
+      code: "FETCH_TRAINERS_ERROR"
+    });
   }
 };
 
@@ -26,12 +30,23 @@ const verEntrenador = async (req, res) => {
     });
 
     if (!entrenador) {
-      return res.status(404).json({ error: "Entrenador no encontrado" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Entrenador no encontrado",
+        code: "TRAINER_NOT_FOUND"
+      });
     }
 
-    res.json(entrenador);
-  } catch (e) {
-    res.status(500).json({ error: "Error al obtener entrenador" });
+    res.json({ 
+      success: true,
+      data: entrenador 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener entrenador",
+      code: "FETCH_TRAINER_ERROR"
+    });
   }
 };
 
@@ -85,7 +100,11 @@ const actualizarEntrenador = async (req, res) => {
     });
 
     if (!entrenador) {
-      return res.status(404).json({ error: "Entrenador no encontrado" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Entrenador no encontrado",
+        code: "TRAINER_NOT_FOUND"
+      });
     }
 
     await entrenador.Usuario.Persona.update({ nombre, apellido, telefono });
@@ -103,9 +122,17 @@ const actualizarEntrenador = async (req, res) => {
       await entrenador.update({ equipo_id });
     }
 
-    res.json({ mensaje: "Entrenador actualizado correctamente" });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.json({ 
+      success: true,
+      message: "Entrenador actualizado correctamente" 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: "Error al actualizar entrenador",
+      code: "UPDATE_TRAINER_ERROR",
+      error: error.message 
+    });
   }
 };
 

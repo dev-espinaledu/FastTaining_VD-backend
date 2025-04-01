@@ -13,10 +13,12 @@ exports.login = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Verificar la contraseña
-    const passwordValida = await bcrypt.compare(password, usuario.password);
-    if (!passwordValida) {
-      return res.status(401).json({ message: "Contraseña incorrecta" });
+    // Verificar contraseña con mínimo 8 caracteres, una mayúscula, un número y un símbolo especial
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
+      });
     }
 
     // Obtener el rol y el correo del usuario
@@ -70,15 +72,17 @@ exports.solicitarRecuperacion = async (req, res) => {
   }
 };
 
-
 // Restablecer la contraseña
 exports.restablecerContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;
 
-    // Validar la nueva contraseña :v
-    if (nuevaContrasena.length < 8) {
-      return res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
+    // Validar la nueva contraseña con mínimo 8 caracteres, una mayúscula, un número y un símbolo especial
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(nuevaContrasena)) {
+      return res.status(400).json({
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
+      });
     }
 
     // Buscar el token en la base de datos
