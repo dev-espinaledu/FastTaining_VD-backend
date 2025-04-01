@@ -154,12 +154,19 @@ const verPerfil = async (req, res) => {
       include: [
         {
           model: Usuario,
-          include: [Persona]
-        }
-      ]
+          as: 'usuarios',
+          include: [
+            {
+              model: Persona,
+              as: 'personas',
+              attributes: ['id', 'nombre', 'apellido', 'telefono']
+            }
+          ],
+        },
+      ],
     });
 
-    if (!entrenador) {
+    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
       return res.status(404).json({ 
         success: false,
         message: "Perfil no encontrado",
@@ -167,12 +174,9 @@ const verPerfil = async (req, res) => {
       });
     }
 
-    const camposObligatorios = {
-      nombre: entrenador.Usuario.Persona.nombre,
-      apellido: entrenador.Usuario.Persona.apellido,
-      telefono: entrenador.Usuario.Persona.telefono
-    };
+    const { nombre, apellido, telefono } = entrenador.usuarios.personas; // Acceder correctamente
 
+    const camposObligatorios = { nombre, apellido, telefono };
     const faltantes = Object.entries(camposObligatorios)
       .filter(([_, value]) => !value)
       .map(([key]) => key);
@@ -183,11 +187,7 @@ const verPerfil = async (req, res) => {
         perfilCompleto: false,
         message: "Falta completar información del perfil",
         camposFaltantes: faltantes,
-        datos: {
-          nombre: entrenador.Usuario.Persona.nombre,
-          apellido: entrenador.Usuario.Persona.apellido,
-          telefono: entrenador.Usuario.Persona.telefono
-        }
+        datos: { nombre, apellido, telefono }
       });
     }
 
@@ -195,11 +195,7 @@ const verPerfil = async (req, res) => {
       success: true,
       perfilCompleto: true,
       message: "Perfil completo",
-      datos: {
-        nombre: entrenador.Usuario.Persona.nombre,
-        apellido: entrenador.Usuario.Persona.apellido,
-        telefono: entrenador.Usuario.Persona.telefono
-      }
+      datos: { nombre, apellido, telefono }
     });
 
   } catch (error) {
@@ -243,13 +239,20 @@ const actualizarPerfil = async (req, res) => {
       include: [
         {
           model: Usuario,
-          include: [Persona]
-        }
+          as: 'usuarios',
+          include: [
+            {
+              model: Persona,
+              as: 'personas',
+              attributes: ['id', 'nombre', 'apellido', 'telefono']
+            },
+          ],
+        },
       ],
       transaction: t
     });
 
-    if (!entrenador) {
+    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
       await t.rollback();
       return res.status(404).json({ 
         success: false,
@@ -258,11 +261,18 @@ const actualizarPerfil = async (req, res) => {
       });
     }
 
-    await entrenador.Usuario.Persona.update({
-      nombre,
-      apellido,
-      telefono: telefono || entrenador.Usuario.Persona.telefono
-    }, { transaction: t });
+    // Actualizar Persona usando update con where
+    await Persona.update(
+      {
+        nombre,
+        apellido,
+        telefono: telefono || entrenador.usuarios.personas.telefono
+      },
+      {
+        where: { id: entrenador.usuarios.personas.id },
+        transaction: t
+      }
+    );
 
     await t.commit();
     
@@ -272,7 +282,7 @@ const actualizarPerfil = async (req, res) => {
       data: {
         nombre,
         apellido,
-        telefono: telefono || entrenador.Usuario.Persona.telefono
+        telefono: telefono || entrenador.usuarios.personas.telefono
       }
     });
 
