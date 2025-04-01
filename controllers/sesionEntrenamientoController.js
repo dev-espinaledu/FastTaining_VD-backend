@@ -6,7 +6,6 @@ const generarEntrenamiento = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Obtener la sesión con el jugador asociado
     const sesion = await DatoSesion.findByPk(id, {
       include: [{ model: Equipo, as: "datos_sesions" }],
     });
