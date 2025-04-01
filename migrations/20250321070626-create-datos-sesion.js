@@ -9,6 +9,11 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.SMALLINT
       },
+      equipo_id:{
+        type: Sequelize.SMALLINT,
+        allowNull: false,
+        references: { model: "equipos", key: "equipo_id" },
+      },
       fecha: {
         type: Sequelize.DATE,
         allowNull: false
@@ -16,16 +21,43 @@ module.exports = {
       objetivo: {
         type: Sequelize.STRING,
         allowNull: false
-
       },
-      jugador_id: {
-        type: Sequelize.SMALLINT,
-        allowNull: false,
-        references: {
-          model: "jugadores",
-          key: "id",
-        },
+      altura: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
       },
+      peso: {
+        type: Sequelize.STRING,
+        allowNull:true
+      },
+      grasa_corporal: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      },
+      masa_muscular: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      }, 
+      potencia_muscular: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      },
+      velocidad: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      },
+      resistencia_aerobica: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      },
+      resistencia_anaerobica: {
+        type: Sequelize.DOUBLE,
+        allowNull:true
+      },
+      flexibilidad: {
+        type: Sequelize.DOUBLE,
+      },
+    
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
