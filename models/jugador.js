@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       porcentaje_grasa_corporal: DataTypes.DOUBLE,
       porcentaje_masa_muscular: DataTypes.DOUBLE,
       tipo_cuerpo: DataTypes.STRING,
-      fuerza: DataTypes.DOUBLE,
+      potencia_muscular_pierna: DataTypes.DOUBLE,
       velocidad_max: DataTypes.DOUBLE,
       resistencia_aerobica: DataTypes.DOUBLE,
       resistencia_anaerobica: DataTypes.DOUBLE,
