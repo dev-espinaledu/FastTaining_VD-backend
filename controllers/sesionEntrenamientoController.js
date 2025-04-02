@@ -2,7 +2,13 @@ const {DatoSesion, Entrenamiento, Equipo} = require("../models");
 
 require("dotenv").config();
 
-const generarEntrenamiento = async (req, res) => {
+const {DatoSesion, Entrenamiento, Jugador} = require("../models");
+/* const Openai = require("../api/openia");
+const axios = require("axios");
+ */
+require("dotenv").config();
+
+const generarEntrenamientoIndividual = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -13,6 +19,8 @@ const generarEntrenamiento = async (req, res) => {
     if (!sesion) {
       return res.status(404).json({ error: "Sesión no encontrada" });
     }
+
+    console.log("API Key:", process.env.OPENROUTE_API_KEY);
 
     const equipo = sesion.datos_sesions;
     if (!equipo) {
@@ -43,9 +51,9 @@ const generarEntrenamiento = async (req, res) => {
           - Flexibilidad: ${sesion.flexibilidad} cm
 
           Devuelve un entrenamiento estructurado en tres fases:
-          1. *Fase Inicial*: Ejercicios de calentamiento.
-          2. *Fase Central*: Ejercicios específicos de fútbol.
-          3. *Fase Final*: Ejercicios de enfriamiento.
+          1. **Fase Inicial**: Ejercicios de calentamiento.
+          2. **Fase Central**: Ejercicios específicos de fútbol.
+          3. **Fase Final**: Ejercicios de enfriamiento.
 
           Responde en formato JSON con esta estructura:
           {

@@ -22,7 +22,6 @@ router.get(
   authMiddleware,
   entrenadorController.verEntrenador,
 );
-
 module.exports = router;
 
 // http://localhost:5000/api/entrenador/ver <- Ruta para mostrar datos de entrenador
