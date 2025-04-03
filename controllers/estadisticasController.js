@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const { Estadisticas } = require("../models");
+const { Historial } = require("../models");
 
 const obtenerEstadisticasJugador = async (req, res) => {
   const { id } = req.params;
@@ -13,7 +13,7 @@ const obtenerEstadisticasJugador = async (req, res) => {
   }
 
   try {
-    const estadisticas = await Estadisticas.findAll({
+    const estadisticas = await Historial.findAll({
       where: { jugador_id: id },
       attributes: [
         [
@@ -50,29 +50,28 @@ const agregarDatosEstadisticasJugador = async (req, res) => {
   try {
     const { jugador_id } = req.params;
     const {
-      altura,
-      peso,
-      porcentaje_grasa_corporal,
-      porcentaje_masa_muscular,
-      fuerza,
-      velocidad_max,
-      resistencia_aerobica,
-      resistencia_anaerobica,
-      flexibilidad,
+      fecha_registro, // TIMESTAMP WITH TIME ZONE NOT NULL
+      porcentaje_grasa_corporal, // %
+      porcentaje_masa_muscular, // %
+      potencia_muscular_pierna, // Salto horizontal, distancia en metros
+      velocidad_max, // Km/h Sprint de 30m
+      resistencia_aerobica, // VO₂ máx, gráfico con  ml/kg/min
+      resistencia_anaerobica, // Test de 10x40m tiempo promedio de los sprints
+      flexibilidad, // Test de sit and reach. distancia alcanzada en cm
     } = req.body;
 
     if (!jugador_id) {
       return res.status(400).json({ error: "Se requiere un jugador" });
     }
 
-    const nuevoRegistro = await Estadisticas.create({
+    const nuevoRegistro = await Historial.create({
       jugador_id,
-      fecha_registro: new Date(),
+      fecha_registro: fecha_registro || new Date(),
       altura,
       peso,
       porcentaje_grasa_corporal,
       porcentaje_masa_muscular,
-      fuerza,
+      potencia_muscular_pierna,
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,

@@ -5,25 +5,33 @@ const {
   authMiddleware,
   verificarAdmin,
   verificarEntrenador,
-  verificarUsuarioOAdmin
+  verificarUsuarioOAdmin,
 } = require("../middlewares/authMiddleware");
-const { validateProfileData, validateImage } = require("../middlewares/validationMiddleware");
+const {
+  validateProfileData,
+  validateImage,
+} = require("../middlewares/validationMiddleware");
 
 // 🔹 Perfil del entrenador actual (requiere autenticación y rol entrenador)
-router.get("/entrenador/perfil", 
-  authMiddleware, 
-  verificarEntrenador, 
-  entrenadorController.verPerfil
+router.get(
+  "/entrenador/perfil",
+  authMiddleware,
+  verificarEntrenador,
+  entrenadorController.verPerfil,
 );
 
-router.put("/entrenador/perfil", 
-  authMiddleware, 
+router.put(
+  "/entrenador/perfil",
+  authMiddleware,
   verificarEntrenador,
   validateProfileData,
   validateImage,
-  entrenadorController.actualizarPerfil
+  entrenadorController.actualizarPerfil,
 );
 router.get("/entrenador/:id", entrenadorController.verEntrenador);
+
+router.post("/entrenador/crear", entrenadorController.crearEntrenador);
+
 module.exports = router;
 
 // http://localhost:5000/api/entrenador/ver <- Ruta para mostrar datos de entrenador
