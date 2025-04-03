@@ -1,11 +1,15 @@
-const express = require("express");
-const router = express.Router();
-const equipoController = require("../controllers/equipoController");
+const express = require('express');
+const multer = require("multer");
+const { createTeam, getTeams } = require('../controllers/equipoController');
+const upload = require('../middlewares/upload'); // Middleware para manejar imágenes
+ 
 
-router.get("/equipo/ver", equipoController.verEquipos);
-router.post("/equipo/crear", equipoController.crearEquipo);
-router.get("/equipo/:id", equipoController.verEquipo);
-// router.put("/equipo/:id", equipoController.actualizarJugador);
-// router.delete("/equipo/:id", equipoController.eliminarJugador);
+const router = express.Router();
+ 
+
+router.post('/equipos', upload.single('escudo'), createTeam);
+console.log("✅ Ruta /api/equipos cargada correctamente");
+
+router.get('/equipos', getTeams);
 
 module.exports = router;
