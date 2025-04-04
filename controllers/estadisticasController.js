@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const { Estadisticas } = require("../models");
+const { Historial } = require("../models");
 
 const obtenerEstadisticasJugador = async (req, res) => {
   const { id } = req.params;
@@ -13,24 +13,26 @@ const obtenerEstadisticasJugador = async (req, res) => {
   }
 
   try {
-    const estadisticas = await Estadisticas.findAll({
+    const estadisticas = await Historial.findAll({
       where: { jugador_id: id },
       attributes: [
         [
-          Sequelize.fn("DATE_TRUNC", "month", Sequelize.col("fecha_registro")),
-          "mes",
+          Sequelize.fn("to_char", 
+            Sequelize.fn("DATE_TRUNC", "month", Sequelize.col("fecha_registro")),
+            'YYYY-MM-DD'
+          ),
+          "mes"
         ],
-        Sequelize.col("altura"),
-        Sequelize.col("peso"),
-        Sequelize.col("porcentaje_grasa_corporal"),
-        Sequelize.col("porcentaje_masa_muscular"),
-        Sequelize.col("fuerza"),
-        Sequelize.col("velocidad_max"),
-        Sequelize.col("resistencia_aerobica"),
-        Sequelize.col("resistencia_anaerobica"),
-        Sequelize.col("flexibilidad"),
+        [Sequelize.col("porcentaje_grasa_corporal"), "porcentaje_grasa_corporal"],
+        [Sequelize.col("porcentaje_masa_muscular"), "porcentaje_masa_muscular"],
+        [Sequelize.col("potencia_muscular_piernas"), "potencia_muscular_piernas"],
+        [Sequelize.col("velocidad_max"), "velocidad_max"],
+        [Sequelize.col("resistencia_aerobica"), "resistencia_aerobica"],
+        [Sequelize.col("resistencia_anaerobica"), "resistencia_anaerobica"],
+        [Sequelize.col("flexibilidad"), "flexibilidad"],
       ],
-      order: [["mes", "ASC"]],
+      order: [[Sequelize.col("mes"), "ASC"]],
+      raw: true
     });
 
     if (!estadisticas.length) {
@@ -39,7 +41,35 @@ const obtenerEstadisticasJugador = async (req, res) => {
       });
     }
 
-    res.json(estadisticas);
+    // Transformar los datos para el frontend
+    const meses = estadisticas.map(stat => {
+      const fecha = new Date(stat.mes);
+      return `${fecha.toLocaleString('es', { month: 'short' })} ${fecha.getFullYear()}`;
+    });
+
+    const datosFormateados = {
+      labels: meses,
+      datasets: {
+        porcentaje_grasa_corporal: estadisticas.map(stat => parseFloat(stat.porcentaje_grasa_corporal) || null),
+        porcentaje_masa_muscular: estadisticas.map(stat => parseFloat(stat.porcentaje_masa_muscular) || null),
+        potencia_muscular_piernas: estadisticas.map(stat => parseFloat(stat.potencia_muscular_piernas) || null),
+        velocidad_max: estadisticas.map(stat => parseFloat(stat.velocidad_max) || null),
+        resistencia_aerobica: estadisticas.map(stat => parseFloat(stat.resistencia_aerobica) || null),
+        resistencia_anaerobica: estadisticas.map(stat => parseFloat(stat.resistencia_anaerobica) || null),
+        flexibilidad: estadisticas.map(stat => parseFloat(stat.flexibilidad) || null)
+      },
+      unidades: {
+        porcentaje_grasa_corporal: '%',
+        porcentaje_masa_muscular: '%',
+        potencia_muscular_piernas: 'm',
+        velocidad_max: 'Km/h',
+        resistencia_aerobica: 'ml/kg/min',
+        resistencia_anaerobica: 'seg',
+        flexibilidad: 'cm'
+      }
+    };
+
+    res.json(datosFormateados);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al obtener las estadísticas" });
@@ -50,29 +80,26 @@ const agregarDatosEstadisticasJugador = async (req, res) => {
   try {
     const { jugador_id } = req.params;
     const {
-      altura,
-      peso,
-      porcentaje_grasa_corporal,
-      porcentaje_masa_muscular,
-      fuerza,
-      velocidad_max,
-      resistencia_aerobica,
-      resistencia_anaerobica,
-      flexibilidad,
+      fecha_registro, // TIMESTAMP WITH TIME ZONE NOT NULL
+      porcentaje_grasa_corporal, // %
+      porcentaje_masa_muscular, // %
+      potencia_muscular_piernas, // Salto horizontal, distancia en metros
+      velocidad_max, // Km/h Sprint de 30m
+      resistencia_aerobica, // VO₂ máx, gráfico con  ml/kg/min
+      resistencia_anaerobica, // Test de 10x40m tiempo promedio de los sprints
+      flexibilidad, // Test de sit and reach. distancia alcanzada en cm
     } = req.body;
-
+    console.log(jugador_id);
     if (!jugador_id) {
       return res.status(400).json({ error: "Se requiere un jugador" });
     }
 
-    const nuevoRegistro = await Estadisticas.create({
+    const nuevoRegistro = await Historial.create({
       jugador_id,
-      fecha_registro: new Date(),
-      altura,
-      peso,
+      fecha_registro: fecha_registro || new Date(),
       porcentaje_grasa_corporal,
       porcentaje_masa_muscular,
-      fuerza,
+      potencia_muscular_piernas,
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,

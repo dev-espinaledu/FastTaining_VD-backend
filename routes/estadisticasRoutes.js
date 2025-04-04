@@ -12,8 +12,8 @@ router.get(
   estadisticasController.obtenerEstadisticasJugador,
 );
 router.post(
-  "/estadisticas/jugador/:id",
-  authMiddleware,
+  "/estadisticas/jugador/:jugador_id",
+  // authMiddleware,
   estadisticasController.agregarDatosEstadisticasJugador,
 );
 
