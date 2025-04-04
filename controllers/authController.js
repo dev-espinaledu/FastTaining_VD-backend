@@ -95,14 +95,15 @@ exports.solicitarRecuperacion = async (req, res) => {
       });
     }
 
-    // Generar token de recuperación
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiration = new Date(Date.now() + 3600000); // 1 hora
+    // Eliminar tokens previos si existen
+    await Token.destroy({ where: { usuario_id: usuario.id } });
 
+    // Generar nuevo token (se usa createdAt para calcular la expiración)
+    const token = crypto.randomBytes(32).toString("hex");
+    
     await Token.create({
       usuario_id: usuario.id,
-      reset_token: token,
-      reset_expiration: expiration
+      reset_token: token
     });
 
     // Enviar correo
@@ -137,19 +138,28 @@ exports.restablecerContrasena = async (req, res) => {
       });
     }
 
-    // Buscar token válido
+    // Buscar token
     const tokenRecord = await Token.findOne({ 
       where: { 
-        reset_token: token,
-        reset_expiration: { [Op.gt]: new Date() }
+        reset_token: token
       }
     });
 
     if (!tokenRecord) {
       return res.status(400).json({
         success: false,
-        message: "Token inválido o expirado",
+        message: "Token inválido",
         code: "INVALID_TOKEN"
+      });
+    }
+
+    // Calcular expiración
+    const fechaExpiracion = new Date(tokenRecord.createdAt.getTime() + 3600000); // 1 hora :p
+    if (fechaExpiracion < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Token expirado",
+        code: "EXPIRED_TOKEN"
       });
     }
 
@@ -165,6 +175,8 @@ exports.restablecerContrasena = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
     await usuario.update({ password: hashedPassword });
+    
+    // Eliminar el token usado
     await Token.destroy({ where: { reset_token: token } });
 
     res.json({

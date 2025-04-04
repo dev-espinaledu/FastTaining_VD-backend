@@ -22,7 +22,7 @@ const enviarCorreoRecuperacion = async (email, token) => {
         const resetLink = `${process.env.FRONTEND_URL}/auth/restablecer?token=${token}`;
 
         const mailOptions = {
-            from: `"Soporte Fast Training con Pepe" <${process.env.SMTP_USER}>`,
+            from: `"Soporte Fast Training" <${process.env.SMTP_USER}>`,
             to: email,
             subject: "Recuperación de contraseña",
             html: `
