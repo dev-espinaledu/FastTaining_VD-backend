@@ -1,44 +1,62 @@
 const { Equipo, Jugador } = require("../models");
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const s3 = require('../config/cloudflare');
+require('dotenv').config();
 
-const verEquipos = async (req, res) => {
-  try {
-    const equipos = await Equipo.findAll();
-    res.json(equipos);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+// Función para subir imagen a Cloudflare R2
+const uploadToCloudflare = async (file) => {
+  const fileName = `equipos/${Date.now()}-${file.originalname}`;
+  const params = {
+    Bucket: process.env.CLOUDFLARE_BUCKET_NAME,
+    Key: fileName,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  };
+
+  await s3.send(new PutObjectCommand(params));
+  return `https://${process.env.CLOUDFLARE_BUCKET_NAME}.r2.cloudflarestorage.com/${fileName}`;
 };
 
-const verEquipo = async (req, res) => {
+// Crear un nuevo equipo
+const createTeam = async (req, res) => {
   try {
-    const { id } = req.params;
-    const equipo = await Equipo.findByPk(id, {
-      include: [{ model: Jugador, as: "jugadores" }], // Relación con jugadores
-    });
+    console.log("📩 Datos recibidos en createTeam:", req.body);
+    console.log("📸 Archivo recibido:", req.file ? req.file.originalname : "Ninguno");
 
-    if (!equipo) {
-      return res.status(404).json({ error: "Equipo no encontrado" });
+    const { nombre, descripcion } = req.body;
+    let escudo_url = null;
+
+    if (req.file) {
+      escudo_url = await uploadToCloudflare(req.file);
+      console.log("✅ Imagen subida a Cloudflare:", escudo_url);
     }
 
-    res.json(equipo);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const nuevoEquipo = await Equipo.create({ nombre, escudo_url, descripcion });
+    console.log("✅ Equipo creado en la BD:", nuevoEquipo);
+
+    res.status(201).json({ message: "Equipo creado exitosamente", equipo: nuevoEquipo });
+  } catch (error) {
+    console.error("❌ Error en createTeam:", error);
+    res.status(500).json({ error: "Error al crear el equipo" });
   }
 };
 
-const crearEquipo = async (req, res) => {
+
+// Obtener todos los equipos
+const getTeams = async (req, res) => {
   try {
-    const { nombre, escudo_url, descripcion } = req.body;
-    const nuevoEquipo = await Equipo.create({
-      nombre,
-      escudo_url,
-      descripcion
+    const equipos = await Equipo.findAll({
+      include: [
+        { association: 'entrenadores' },
+        { association: 'jugadores' },
+      ],
     });
 
-    res.json({ equipo: nuevoEquipo });
-  } catch (e) {
-    res.status(500).json({ error: e });
+    res.status(200).json(equipos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener equipos' });
   }
 };
 
-module.exports = { verEquipos, crearEquipo, verEquipo };
+module.exports = { createTeam, getTeams };
