@@ -1,5 +1,5 @@
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const { Equipo } = require('../models/equipo'); // Importar el modelo de Equipo
+const { Equipo } = require('../models'); // Importar el modelo de Equipo
 const s3 = require('../config/cloudflare');
 require('dotenv').config();
 

@@ -15,7 +15,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   Equipo.init(
     {
-      nombre: DataTypes.STRING,
+      nombre: {
+        type: DataTypes.STRING,
+        allowNull: false, // 👈 Esto evita que se guarden valores nulos
+        validate: {
+          notEmpty: true, // 👈 Evita cadenas vacías
+        },
+      },
       escudo_url: DataTypes.STRING,
       descripcion: DataTypes.STRING
     },
