@@ -44,6 +44,7 @@ const verJugadores = async (req, res) => {
 
 const verJugador = async (req, res) => {
   const { id } = req.params;
+  console.log("ID recibido en verJugador:", id);
   try {
     const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
       id,
@@ -74,7 +75,7 @@ const crearJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    potencia_muscular_pierna,
+    potencia_muscular_piernas,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -122,7 +123,7 @@ const crearJugador = async (req, res) => {
         porcentaje_grasa_corporal,
         porcentaje_masa_muscular,
         tipo_cuerpo,
-        potencia_muscular_pierna,
+        potencia_muscular_piernas,
         velocidad_max,
         resistencia_aerobica,
         resistencia_anaerobica,
@@ -171,7 +172,7 @@ const actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      potencia_muscular_pierna,
+      potencia_muscular_piernas,
       velocidad,
       potencia,
       equipo_id,
@@ -203,7 +204,7 @@ const actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      potencia_muscular_pierna,
+      potencia_muscular_piernas,
       velocidad,
       potencia,
       equipo_id,
@@ -226,7 +227,7 @@ const actualizarCapacidadJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    potencia_muscular_pierna,
+    potencia_muscular_piernas,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -244,7 +245,7 @@ const actualizarCapacidadJugador = async (req, res) => {
       porcentaje_grasa_corporal,
       porcentaje_masa_muscular,
       tipo_cuerpo,
-      potencia_muscular_pierna,
+      potencia_muscular_piernas,
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,

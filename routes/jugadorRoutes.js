@@ -15,7 +15,7 @@ const {
 
 // 🔹 Perfil del jugador actual (requiere autenticación y rol jugador)
 router.get(
-  "/jugador/perfil/:id",
+  "/jugador/perfil",
   authMiddleware,
   roleMiddleware("jugador"),
   jugadorController.verPerfil,
