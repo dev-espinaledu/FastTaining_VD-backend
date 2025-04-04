@@ -379,6 +379,31 @@ const actualizarPerfil = async (req, res) => {
   }
 };
 
+const obtenerJugadorPorUsuario = async (req, res) => {
+  try {
+    const { id } = req.params; // Este es el ID del usuario
+    
+    const jugador = await Jugador.findOne({
+      where: { usuario_id: id },
+      attributes: ['id'] // Solo necesitamos el ID del jugador
+    });
+
+    if (!jugador) {
+      return res.status(404).json({ 
+        mensaje: "No se encontró un jugador asociado a este usuario" 
+      });
+    }
+
+    res.json(jugador);
+  } catch (error) {
+    console.error("Error al obtener jugador por usuario:", error);
+    res.status(500).json({ 
+      error: "Error al obtener el jugador",
+      detalles: error.message 
+    });
+  }
+};
+
 module.exports = {
   verJugadores,
   verJugador,
@@ -388,4 +413,5 @@ module.exports = {
   actualizarCapacidadJugador,
   verPerfil,
   actualizarPerfil,
+  obtenerJugadorPorUsuario,
 };

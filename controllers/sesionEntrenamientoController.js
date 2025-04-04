@@ -1,4 +1,4 @@
-const {DatoSesion, Entrenamiento, Equipo} = require("../models");
+const {DatoSesion, Entrenamiento, Equipo, Jugador} = require("../models");
 
 require("dotenv").config();
 
@@ -6,7 +6,6 @@ const generarEntrenamiento = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Obtener la sesión con el jugador asociado
     const sesion = await DatoSesion.findByPk(id, {
       include: [{ model: Equipo, as: "datos_sesions" }],
     });
@@ -14,6 +13,8 @@ const generarEntrenamiento = async (req, res) => {
     if (!sesion) {
       return res.status(404).json({ error: "Sesión no encontrada" });
     }
+
+    console.log("API Key:", process.env.OPENROUTE_API_KEY);
 
     const equipo = sesion.datos_sesions;
     if (!equipo) {
@@ -115,7 +116,9 @@ const generarEntrenamiento = async (req, res) => {
     return res.status(500).json({ error: "Error generando entrenamiento" });
   }
 };
+
 //-------------------------------------
+
 const verEntrenamientoIndividual = async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,7 +167,9 @@ const verEntrenamientoIndividual = async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
 //-----------------------------------------------
+
 const verEntrenamientos = async (req, res) => {
   try {
     console.log("Está accediendo a la funcionalidad de VerEntrenamiento")
@@ -206,6 +211,72 @@ const verEntrenamientos = async (req, res) => {
   }
 };
 
+// Obtener todos los entrenamientos de un jugador
+
+const obtenerEntrenamientosPorJugador = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Primero obtenemos la posición del jugador
+    const jugador = await Jugador.findByPk(id, {
+      attributes: ['posicion']
+    });
+
+    if (!jugador) {
+      return res.status(404).json({ 
+        mensaje: "Jugador no encontrado" 
+      });
+    }
+
+    // Buscamos entrenamientos por posición
+    const entrenamientos = await Entrenamiento.findAll({
+      include: [{
+        model: DatoSesion,
+        as: "datosSesion",
+        where: { 
+          posicion: jugador.posicion
+        },
+        attributes: ["fecha", "objetivo"]
+      }]
+    });
+
+    if (entrenamientos.length === 0) {
+      return res.status(404).json({ 
+        mensaje: `No se encontraron entrenamientos para la posición ${jugador.posicion}` 
+      });
+    }
+
+    const entrenamientosFormateados = entrenamientos.map(entrenamiento => {
+      const datos = entrenamiento.datosSesion;
+      return {
+        id: entrenamiento.id,
+        fecha: datos.fecha || "Fecha no disponible",
+        objetivo: datos.objetivo || "Objetivo no disponible",
+        posicion: jugador.posicion,
+        fase_inicial: typeof entrenamiento.fase_inicial === 'string' 
+          ? JSON.parse(entrenamiento.fase_inicial) 
+          : entrenamiento.fase_inicial || [],
+        fase_central: typeof entrenamiento.fase_central === 'string' 
+          ? JSON.parse(entrenamiento.fase_central) 
+          : entrenamiento.fase_central || [],
+        fase_final: typeof entrenamiento.fase_final === 'string' 
+          ? JSON.parse(entrenamiento.fase_final) 
+          : entrenamiento.fase_final || []
+      };
+    });
+
+    res.json(entrenamientosFormateados);
+
+  } catch (error) {
+    console.error("Error al obtener entrenamientos:", error);
+    res.status(500).json({ 
+      error: "Error al obtener los entrenamientos",
+      detalles: error.message 
+    });
+  }
+};
+
+// Obtener todos los entrenamientos hechos por un jugador
 
 
-module.exports = { generarEntrenamiento, verEntrenamientos, verEntrenamientoIndividual};
+module.exports = { generarEntrenamiento, verEntrenamientos, verEntrenamientoIndividual, obtenerEntrenamientosPorJugador };

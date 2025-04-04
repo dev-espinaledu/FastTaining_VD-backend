@@ -28,6 +28,7 @@ router.put(
   validateImage,
   entrenadorController.actualizarPerfil,
 );
+
 router.get("/entrenador/:id", entrenadorController.verEntrenador);
 
 router.post("/entrenador/crear", entrenadorController.crearEntrenador);
