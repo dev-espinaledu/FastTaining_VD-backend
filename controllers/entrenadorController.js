@@ -147,7 +147,7 @@ const actualizarEntrenador = async (req, res) => {
 
 const verPerfil = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
+    const usuarioId = req.params.id;
     
     const entrenador = await Entrenador.findOne({
       where: { usuario_id: usuarioId },
@@ -298,11 +298,18 @@ const actualizarPerfil = async (req, res) => {
   }
 };
 
+const obtenerEntrenadorPorUsuario = async (req, res) => {
+  const { id } = req.params;
+  const entrenador = await Entrenador.findOne({ where: { usuario_id: id } });
+  res.json(entrenador);
+};
+
 module.exports = { 
   verEntrenadores, 
   crearEntrenador, 
   verEntrenador, 
   actualizarEntrenador, 
   verPerfil, 
-  actualizarPerfil 
+  actualizarPerfil,
+  obtenerEntrenadorPorUsuario
 };

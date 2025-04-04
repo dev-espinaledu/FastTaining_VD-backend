@@ -14,10 +14,17 @@ const {
 
 // 🔹 Perfil del entrenador actual (requiere autenticación y rol entrenador)
 router.get(
-  "/entrenador/perfil",
+  "/entrenador/perfil/:id",
   authMiddleware,
   verificarEntrenador,
   entrenadorController.verPerfil,
+);
+
+// Obtener entrenador por ID de usuario
+router.get(
+  "/entrenador/usuario/:id",
+  authMiddleware,
+  entrenadorController.obtenerEntrenadorPorUsuario
 );
 
 router.put(

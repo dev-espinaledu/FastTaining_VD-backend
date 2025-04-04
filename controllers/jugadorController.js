@@ -275,7 +275,7 @@ const eliminarJugador = async (req, res) => {
 
 const verPerfil = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
+    const usuarioId = req.params.id;
 
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
