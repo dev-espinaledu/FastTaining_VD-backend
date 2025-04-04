@@ -2,19 +2,19 @@ const pool = require("../config/db");
 const { Persona, Usuario, Jugador, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 
-exports.verJugadores = async (req, res) => {
+const verJugadores = async (req, res) => {
   try {
     const response = await Jugador.findAll({
       attributes: { exclude: ["frecuencia_cardiaca"] },
       include: [
         {
           model: Usuario,
-          as: "usuarios", // Se mantiene el alias actual
+          as: "usuarios", // Usa el alias definido en la relación
           attributes: ["email"],
           include: [
             {
               model: Persona,
-              as: "personas", // Se mantiene el alias actual
+              as: "personas", // Usa el alias definido en la relación
               attributes: ["nombre", "apellido"],
             },
           ],
@@ -36,12 +36,13 @@ exports.verJugadores = async (req, res) => {
     return res.json(jugadores);
   } catch (error) {
     console.error("Error al obtener jugadores:", error);
-    return res.status(500).json({ error: "Error al obtener jugadores", detalle: error.message });
+    return res
+      .status(500)
+      .json({ error: "Error al obtener jugadores", detalle: error.message });
   }
 };
 
-
-exports.verJugador = async (req, res) => {
+const verJugador = async (req, res) => {
   const { id } = req.params;
   try {
     const response = await pool.query("SELECT * FROM jugadores WHERE id = $1", [
@@ -56,7 +57,7 @@ exports.verJugador = async (req, res) => {
   }
 };
 
-exports.crearJugador = async (req, res) => {
+const crearJugador = async (req, res) => {
   const t = await sequelize.transaction(); // Iniciar transacción
 
   const {
@@ -73,7 +74,7 @@ exports.crearJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    fuerza,
+    potencia_muscular_pierna,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -81,14 +82,7 @@ exports.crearJugador = async (req, res) => {
   } = req.body;
   try {
     // Validaciones básicas
-    if (
-      !nombre ||
-      !apellido ||
-      !email ||
-      !pass ||
-      !fecha_nacimiento ||
-      !posicion
-    ) {
+    if (!email || !pass) {
       return res.status(400).json({ error: "Faltan datos obligatorios" });
     }
 
@@ -128,7 +122,7 @@ exports.crearJugador = async (req, res) => {
         porcentaje_grasa_corporal,
         porcentaje_masa_muscular,
         tipo_cuerpo,
-        fuerza,
+        potencia_muscular_pierna,
         velocidad_max,
         resistencia_aerobica,
         resistencia_anaerobica,
@@ -162,7 +156,7 @@ exports.crearJugador = async (req, res) => {
 };
 
 // Esta función está hecha para el admin, controla todo los aspectos del jugador, como usuario, persona y jugador
-exports.actualizarJugador = async (req, res) => {
+const actualizarJugador = async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -177,7 +171,7 @@ exports.actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      fuerza,
+      potencia_muscular_pierna,
       velocidad,
       potencia,
       equipo_id,
@@ -209,7 +203,7 @@ exports.actualizarJugador = async (req, res) => {
       frecuencia_cardiaca,
       peso,
       resistencia,
-      fuerza,
+      potencia_muscular_pierna,
       velocidad,
       potencia,
       equipo_id,
@@ -223,7 +217,7 @@ exports.actualizarJugador = async (req, res) => {
 };
 
 // Esta función es para que el entrenador registre datos físicos del jugador.
-exports.actualizarCapacidadJugador = async (req, res) => {
+const actualizarCapacidadJugador = async (req, res) => {
   const { id } = req.params;
   const {
     altura,
@@ -232,7 +226,7 @@ exports.actualizarCapacidadJugador = async (req, res) => {
     porcentaje_grasa_corporal,
     porcentaje_masa_muscular,
     tipo_cuerpo,
-    fuerza,
+    potencia_muscular_pierna,
     velocidad_max,
     resistencia_aerobica,
     resistencia_anaerobica,
@@ -250,7 +244,7 @@ exports.actualizarCapacidadJugador = async (req, res) => {
       porcentaje_grasa_corporal,
       porcentaje_masa_muscular,
       tipo_cuerpo,
-      fuerza,
+      potencia_muscular_pierna,
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,
@@ -267,7 +261,7 @@ exports.actualizarCapacidadJugador = async (req, res) => {
   }
 };
 
-exports.eliminarJugador = async (req, res) => {
+const eliminarJugador = async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query("DELETE FROM jugadores WHERE id = $1", [id]);
@@ -276,4 +270,148 @@ exports.eliminarJugador = async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Error al eliminar jugador" });
   }
+};
+
+const verPerfil = async (req, res) => {
+  try {
+    const usuarioId = req.user.id;
+
+    const jugador = await Jugador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: "usuarios",
+          include: [
+            {
+              model: Persona,
+              as: "personas",
+              attributes: ["nombre", "apellido", "telefono"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
+      return res.status(404).json({
+        success: false,
+        message: "Perfil no encontrado",
+        code: "PROFILE_NOT_FOUND",
+      });
+    }
+
+    const { nombre, apellido, telefono } = jugador.usuarios.personas;
+    const { fecha_nacimiento } = jugador;
+
+    const perfilCompleto = nombre && apellido && telefono && fecha_nacimiento;
+
+    return res.json({
+      success: true,
+      perfilCompleto,
+      datos: { nombre, apellido, telefono, fecha_nacimiento },
+    });
+  } catch (error) {
+    console.error("Error al ver perfil:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error al obtener perfil",
+      code: "FETCH_PROFILE_ERROR",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+const actualizarPerfil = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const usuarioId = req.user.id;
+    const { nombre, apellido, telefono, fecha_nacimiento } = req.body;
+
+    const jugador = await Jugador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: "usuarios",
+          include: [
+            {
+              model: Persona,
+              as: "personas",
+            },
+          ],
+        },
+      ],
+      transaction: t,
+    });
+
+    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Perfil no encontrado",
+        code: "PROFILE_NOT_FOUND",
+      });
+    }
+
+    // Actualizar datos en Persona
+    await jugador.usuarios.personas.update(
+      { nombre, apellido, telefono },
+      { transaction: t }
+    );
+
+    // Actualizar fecha de nacimiento en Jugador
+    if (fecha_nacimiento) {
+      await jugador.update({ fecha_nacimiento }, { transaction: t });
+    }
+
+    await t.commit();
+    return res.json({ success: true, message: "Perfil actualizado correctamente" });
+  } catch (error) {
+    await t.rollback();
+    console.error("Error al actualizar perfil:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error al actualizar perfil",
+      code: "PROFILE_UPDATE_ERROR",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+const obtenerJugadorPorUsuario = async (req, res) => {
+  try {
+    const { id } = req.params; // Este es el ID del usuario
+    
+    const jugador = await Jugador.findOne({
+      where: { usuario_id: id },
+      attributes: ['id'] // Solo necesitamos el ID del jugador
+    });
+
+    if (!jugador) {
+      return res.status(404).json({ 
+        mensaje: "No se encontró un jugador asociado a este usuario" 
+      });
+    }
+
+    res.json(jugador);
+  } catch (error) {
+    console.error("Error al obtener jugador por usuario:", error);
+    res.status(500).json({ 
+      error: "Error al obtener el jugador",
+      detalles: error.message 
+    });
+  }
+};
+
+module.exports = {
+  verJugadores,
+  verJugador,
+  crearJugador,
+  actualizarJugador,
+  eliminarJugador,
+  actualizarCapacidadJugador,
+  verPerfil,
+  actualizarPerfil,
+  obtenerJugadorPorUsuario,
 };

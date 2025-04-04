@@ -1,76 +1,183 @@
-const { Usuario, Rol } = require("../models");
+const { Usuario, Token, Persona } = require("../models");
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
+const { Op } = require("sequelize");
+const { enviarCorreoRecuperacion } = require("../utils/emailService");
 
-dotenv.config();
+// Mapeo de roles
+const roleMap = {
+  1: "admin",
+  2: "entrenador",
+  3: "jugador"
+};
 
-let intentosFallidos = {}; // Rastreo de intentos fallidos
-
-const login = async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Buscar usuario con su información de persona
+    const usuario = await Usuario.findOne({ 
+      where: { email },
+      include: [
+        { 
+          model: Persona,
+          as: 'personas',
+          attributes: ['nombre', 'apellido', 'telefono']
+        }
+      ],
+      attributes: ['id', 'email', 'password', 'rol_id']
+    });
 
-    // Validación de email y contraseña
-    if (!email || !password) {
-      return res.status(400).json({ message: "Correo y contraseña son obligatorios" });
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ message: "Correo inválido" });
-    }
-
-    // Bloqueo por intentos fallidos
-    if (intentosFallidos[email] && intentosFallidos[email].intentos >= 5) {
-      const tiempoBloqueo = (Date.now() - intentosFallidos[email].primerIntento) / 1000 / 60;
-      if (tiempoBloqueo < 15) {
-        return res.status(403).json({ message: "Demasiados intentos fallidos. Intenta más tarde." });
-      } else {
-        delete intentosFallidos[email];
-      }
-    }
-
-    // Buscar usuario
-    const user = await Usuario.findOne({ where: { email } });
-    if (!user) {
-      return res.status(401).json({ message: "Credenciales inválidas" });
+    if (!usuario) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND"
+      });
     }
 
     // Verificar contraseña
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, usuario.password);
     if (!passwordMatch) {
-      if (!intentosFallidos[email]) {
-        intentosFallidos[email] = { intentos: 1, primerIntento: Date.now() };
-      } else {
-        intentosFallidos[email].intentos++;
-      }
-      return res.status(401).json({ message: "Credenciales inválidas" });
-    }
-
-    // Restablecer intentos fallidos
-    delete intentosFallidos[email];
-
-    // Obtener el rol del usuario
-    const rol = await Rol.findByPk(user.rol_id);
-    if (!rol) {
-      return res.status(500).json({ message: "Error: Rol no encontrado" });
+      return res.status(401).json({
+        success: false,
+        message: "Credenciales inválidas",
+        code: "INVALID_CREDENTIALS"
+      });
     }
 
     // Generar token JWT
-    if (!process.env.JWT_SECRET) {
-      throw new Error("Falta la variable de entorno JWT_SECRET en .env");
-    }
-
     const token = jwt.sign(
-      { userId: user.id, role: rol.nombre }, // Usa rol.id si prefieres
-      process.env.JWT_SECRET,
+      {
+        id: usuario.id,
+        role: usuario.rol_id,
+        roleName: roleMap[usuario.rol_id]
+      },
+      process.env.JWT_SECRET || "secreto_super_seguro",
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login exitoso", token, role: rol.nombre });
+    // Respuesta estructurada
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: usuario.id,
+        email: usuario.email,
+        role: usuario.rol_id,
+        roleName: roleMap[usuario.rol_id],
+        persona: usuario.persona
+      }
+    });
+
   } catch (error) {
-    console.error("Error en /auth/login:", error);
-    res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error en login:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 };
 
-module.exports = { login };
+exports.solicitarRecuperacion = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const usuario = await Usuario.findOne({ where: { email } });
+
+    if (!usuario) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    // Generar token de recuperación
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiration = new Date(Date.now() + 3600000); // 1 hora
+
+    await Token.create({
+      usuario_id: usuario.id,
+      reset_token: token,
+      reset_expiration: expiration
+    });
+
+    // Enviar correo
+    await enviarCorreoRecuperacion(email, token);
+
+    res.json({ 
+      success: true,
+      message: "Correo de recuperación enviado" 
+    });
+
+  } catch (error) {
+    console.error("Error en solicitud de recuperación:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR"
+    });
+  }
+};
+
+exports.restablecerContrasena = async (req, res) => {
+  try {
+    const { token, nuevaContrasena } = req.body;
+
+    // Validar formato de contraseña
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(nuevaContrasena)) {
+      return res.status(400).json({
+        success: false,
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
+        code: "INVALID_PASSWORD_FORMAT"
+      });
+    }
+
+    // Buscar token válido
+    const tokenRecord = await Token.findOne({ 
+      where: { 
+        reset_token: token,
+        reset_expiration: { [Op.gt]: new Date() }
+      }
+    });
+
+    if (!tokenRecord) {
+      return res.status(400).json({
+        success: false,
+        message: "Token inválido o expirado",
+        code: "INVALID_TOKEN"
+      });
+    }
+
+    // Actualizar contraseña
+    const usuario = await Usuario.findByPk(tokenRecord.usuario_id);
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+    await usuario.update({ password: hashedPassword });
+    await Token.destroy({ where: { reset_token: token } });
+
+    res.json({
+      success: true,
+      message: "Contraseña actualizada exitosamente"
+    });
+
+  } catch (error) {
+    console.error("Error al restablecer contraseña:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR"
+    });
+  }
+};

@@ -23,11 +23,11 @@ module.exports = {
         type: Sequelize.DATE,
       },
       altura: {
-        type: Sequelize.SMALLINT,
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
       peso: {
-        type: Sequelize.STRING,
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
       posicion: {
@@ -45,20 +45,20 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull:true
       },
-      fuerza: {
-        type: Sequelize.SMALLINT,
+      potencia_muscular_pierna: {
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
       velocidad_max: {
-        type: Sequelize.SMALLINT,
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
       resistencia_aerobica: {
-        type: Sequelize.SMALLINT,
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
       resistencia_anaerobica: {
-        type: Sequelize.SMALLINT,
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
       flexibilidad: {
