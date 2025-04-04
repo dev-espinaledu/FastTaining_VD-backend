@@ -1,14 +1,7 @@
 const {DatoSesion, Entrenamiento, Equipo} = require("../models");
-
 require("dotenv").config();
 
-const {DatoSesion, Entrenamiento, Jugador} = require("../models");
-/* const Openai = require("../api/openia");
-const axios = require("axios");
- */
-require("dotenv").config();
-
-const generarEntrenamientoIndividual = async (req, res) => {
+const generarEntrenamiento = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -43,7 +36,7 @@ const generarEntrenamientoIndividual = async (req, res) => {
           - Posición en la cancha: ${sesion.posicion}
           - Grasa corporal: ${sesion.porcentaje_grasa_corporal}%
           - Masa muscular: ${sesion.porcentaje_masa_muscular}%
-          - Potencia muscular en piernas: ${sesion.potencia_mucular_pierna}
+          - Potencia muscular en piernas: ${sesion.potencia_mucular_piernas}
           - Velocidad máxima (30m): ${sesion.velocidad} s
           - Resistencia: ${sesion.resistencia} ml/kg/min
           - Resistencia aeróbica: ${sesion.resistencia_aerobica} ml/kg/min

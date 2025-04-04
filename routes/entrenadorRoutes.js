@@ -18,8 +18,8 @@ router.post("/entrenador/crear", entrenadorController.crearEntrenador);
 
 // Obtener un entrenador específico por ID (protegido, solo usuarios autenticados)
 router.get(
-  "/entrenador/:id",
-  authMiddleware,
+  "/entrenador/:usuarioId",
+/*   authMiddleware, */
   entrenadorController.verEntrenador,
 );
 module.exports = router;

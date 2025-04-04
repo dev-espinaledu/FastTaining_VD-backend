@@ -34,6 +34,7 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
+    console.log(`Rol del usuario: ${user.rol_id}`);
 
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -45,6 +46,7 @@ const login = async (req, res) => {
       }
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
+    
 
     // Restablecer intentos fallidos
     delete intentosFallidos[email];
@@ -66,7 +68,7 @@ const login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login exitoso", token, role: rol.nombre });
+    res.json({ message: "Login exitoso",id:user.id , token, role: user.rol_id });
   } catch (error) {
     console.error("Error en /auth/login:", error);
     res.status(500).json({ message: "Error en el servidor" });

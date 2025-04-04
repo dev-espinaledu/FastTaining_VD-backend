@@ -14,15 +14,21 @@ const verEntrenadores = async (req, res) => {
     res.status(500).json({ error: "Error al obtener entrenadores" });
   }
 };
-
 const verEntrenador = async (req, res) => {
   try {
-    const { id } = req.params;
-    const entrenador = await Entrenador.findByPk(id, {
+    const { usuarioId } = req.params;
+
+    const entrenador = await Entrenador.findOne({
+      where: { usuario_id: usuarioId },
       include: [
-        { model: Persona, attributes: ["nombre", "apellido", "telefono"] },
-        { model: Usuario, attributes: ["email"] },
+        {
+          model: Usuario,
+          as: "usuario", 
+          attributes: ["email"],
+/*           include: [{ model: Persona, as: "persona", attributes: ["nombre", "apellido", "telefono"] }], */
+        },
       ],
+      attributes: ["id", "equipo_id"],
     });
 
     if (!entrenador) {
@@ -31,6 +37,7 @@ const verEntrenador = async (req, res) => {
 
     res.json(entrenador);
   } catch (e) {
+    console.error("Error al obtener entrenador:", e);
     res.status(500).json({ error: "Error al obtener entrenador" });
   }
 };

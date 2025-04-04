@@ -6,7 +6,6 @@ const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
 const datosSesion = require("./routes/datosEntrenamientoRoutes");
 const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
-const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
 const app = express();
