@@ -10,6 +10,8 @@ const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
 const estadisticasRoutes = require("./routes/estadisticasRoutes");
+const usuarioRoutes = require("./routes/usuarioRoutes");
+const personaRoutes = require("./routes/personaRoutes");
 const app = express();
 
 // Middleware para parsear JSON
@@ -35,7 +37,8 @@ app.use("/api", equipoRoutes);
 app.use("/api", entrenamientoRoutes);
 app.use("/api", datosSesion);
 app.use("/api", estadisticasRoutes);
-
+app.use("/api", usuarioRoutes);
+app.use("/api", personaRoutes);
 // ✅ Iniciar servidor en el puerto correcto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
