@@ -115,6 +115,8 @@ const generarEntrenamiento = async (req, res) => {
     return res.status(500).json({ error: "Error generando entrenamiento" });
   }
 };
+
+
 //-------------------------------------
 const verEntrenamientoIndividual = async (req, res) => {
   try {

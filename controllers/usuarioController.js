@@ -1,6 +1,15 @@
-/* const { Persona, Usuario, Jugador, sequelize } = require("../models");
+const { Persona, Usuario, Jugador, Entrenador, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 
+
+const CrearUsuario = async (req,res)=>{
+  try{
+
+  }catch(e){
+    console.log()
+    return res.status(500).json({mjs:`Error desde el método CrearUsuario ${e}`})
+  }
+}
 exports.crearJugador = async (req, res) => {
   const t = await sequelize.transaction(); // Iniciar transacción
 
@@ -105,4 +114,16 @@ exports.crearJugador = async (req, res) => {
     return res.status(500).json({ error: "Error al crear jugador" });
   }
 };
- */
+ 
+
+/* 
+# Crear contenido del archivo de texto con los 10 comandos más importantes y 10 comandos raros pero útiles de Git
+
+contenido_txt = """
+
+# Guardar el archivo
+file_path = "/mnt/data/comandos_git_utiles.txt"
+with open(file_path, "w") as f:
+    f.write(contenido_txt)
+
+file_path */
