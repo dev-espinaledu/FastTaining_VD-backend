@@ -63,9 +63,28 @@ const verJugador = async (req, res) => {
         }
       ]
     });
+
+    if (!jugador) {
+      return res.status(404).json({
+        success: false,
+        message: "Jugador no encontrado",
+        code: "PLAYER_NOT_FOUND"
+      });
+    }
+
     res.json({
       success: true,
-      data: jugador
+      data: {
+        id: jugador.id,
+        nombre: jugador.usuarios?.personas?.nombre,
+        apellido: jugador.usuarios?.personas?.apellido,
+        email: jugador.usuarios?.email,
+        telefono: jugador.usuarios?.personas?.telefono,
+        fecha_nacimiento: jugador.fecha_nacimiento,
+        posicion: jugador.posicion,
+        altura: jugador.altura,
+        peso: jugador.peso
+      }
     });
   } catch (error) {
     console.error("Error al obtener jugador:", error);
@@ -76,40 +95,38 @@ const verJugador = async (req, res) => {
     });
   }
 };
-exports.crearJugador = async (req, res) => {
-  const t = await sequelize.transaction(); // Iniciar transacción
 
-  const {
-    nombre,
-    apellido,
-    telefono,
-    email,
-    pass,
-    equipo_id,
-    fecha_nacimiento,
-    altura,
-    peso,
-    posicion,
-    porcentaje_grasa_corporal,
-    porcentaje_masa_muscular,
-    tipo_cuerpo,
-    potencia_muscular_piernas,
-    velocidad_max,
-    resistencia_aerobica,
-    resistencia_anaerobica,
-    flexibilidad,
-  } = req.body;
+const crearJugador = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
-    // Validaciones básicas
-    if (
-      !nombre ||
-      !apellido ||
-      !email ||
-      !pass ||
-      !fecha_nacimiento ||
-      !posicion
-    ) {
-      return res.status(400).json({ error: "Faltan datos obligatorios" });
+    const {
+      nombre,
+      apellido,
+      telefono,
+      email,
+      pass,
+      equipo_id,
+      fecha_nacimiento,
+      altura,
+      peso,
+      posicion,
+      porcentaje_grasa_corporal,
+      porcentaje_masa_muscular,
+      tipo_cuerpo,
+      potencia_muscular_piernas,
+      velocidad_max,
+      resistencia_aerobica,
+      resistencia_anaerobica,
+      flexibilidad
+    } = req.body;
+
+    if (!email || !pass) {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Email y contraseña son obligatorios",
+        code: "MISSING_REQUIRED_FIELDS"
+      });
     }
 
     const emailExiste = await Usuario.findOne({ where: { email } });
@@ -245,18 +262,21 @@ const actualizarJugador = async (req, res) => {
       await jugador.usuarios.update({ password }, { transaction: t });
     }
 
-    await jugador.update({
-      fecha_nacimiento,
-      posicion,
-      altura,
-      frecuencia_cardiaca,
-      peso,
-      resistencia,
-      potencia_muscular_piernas,
-      velocidad,
-      potencia,
-      equipo_id,
-    });
+    await jugador.update(
+      {
+        fecha_nacimiento,
+        posicion,
+        altura,
+        frecuencia_cardiaca,
+        peso,
+        resistencia,
+        potencia_muscular_piernas,
+        velocidad,
+        potencia,
+        equipo_id
+      },
+      { transaction: t }
+    );
 
     await t.commit();
     res.json({
@@ -274,22 +294,8 @@ const actualizarJugador = async (req, res) => {
   }
 };
 
-// Esta función es para que el entrenador registre datos físicos del jugador.
-exports.actualizarCapacidadJugador = async (req, res) => {
-  const { id } = req.params;
-  const {
-    altura,
-    peso,
-    posicion,
-    porcentaje_grasa_corporal,
-    porcentaje_masa_muscular,
-    tipo_cuerpo,
-    potencia_muscular_piernas,
-    velocidad_max,
-    resistencia_aerobica,
-    resistencia_anaerobica,
-    flexibilidad,
-  } = req.body;
+const actualizarCapacidadJugador = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
     const {
@@ -597,6 +603,7 @@ const obtenerJugadorPorUsuario = async (req, res) => {
 module.exports = {
   verJugadores,
   verJugador,
+  crearJugador,
   actualizarJugador,
   actualizarCapacidadJugador,
   eliminarJugador,
