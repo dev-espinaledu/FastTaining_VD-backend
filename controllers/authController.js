@@ -36,7 +36,6 @@ exports.login = async (req, res) => {
         code: "USER_NOT_FOUND"
       });
     }
-    console.log(`Rol del usuario: ${user.rol_id}`);
 
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, usuario.password);
