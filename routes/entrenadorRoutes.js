@@ -20,6 +20,14 @@ router.get(
   entrenadorController.verPerfil,
 );
 
+// Agrega esta nueva ruta
+router.get(
+  '/entrenador/verificar-perfil',
+  authMiddleware,
+  verificarEntrenador,
+  entrenadorController.verificarPerfilCompleto
+);
+
 // Obtener entrenador por ID de usuario
 router.get(
   "/entrenador/usuario/:id",

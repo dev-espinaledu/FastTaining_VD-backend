@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const estadisticasController = require("../controllers/estadisticasController")
-const sesionEntrenamientoController = require("../controllers/sesionEntrenamientoController")
+const estadisticasController = require("../controllers/estadisticasController");
+const sesionEntrenamientoController = require("../controllers/sesionEntrenamientoController");
 const jugadorController = require("../controllers/jugadorController");
 const {
   authMiddleware,
@@ -13,12 +13,22 @@ const {
   validateImage,
 } = require("../middlewares/validationMiddleware");
 
-// 🔹 Perfil del jugador actual (requiere autenticación y rol jugador)
+// 🔹 Public routes (no authentication required)
+router.get("/jugadores/ver", jugadorController.verJugadores);
+
+// 🔹 Player profile routes (requires player authentication)
 router.get(
-  "/jugador/perfil/:id",
+  "/jugador/perfil",
   authMiddleware,
   roleMiddleware("jugador"),
-  jugadorController.verPerfil,
+  jugadorController.verPerfil
+);
+
+router.get(
+  "/jugador/verificar-perfil",
+  authMiddleware,
+  roleMiddleware("jugador"),
+  jugadorController.verificarPerfilCompleto
 );
 
 router.put(
@@ -26,59 +36,63 @@ router.put(
   authMiddleware,
   roleMiddleware("jugador"),
   validateProfileData,
-  validateImage,
-  jugadorController.actualizarPerfil,
+  jugadorController.actualizarPerfil
 );
 
-// Obtiene las estadisticas de un jugador
-router.get("/jugador/estadisticas/:id", authMiddleware, estadisticasController.obtenerEstadisticasJugador)
-
-// Obtiene los entrenamientos de un jugador
+// 🔹 Player statistics and training sessions
 router.get(
-  "/jugador/entrenamientos/:id", 
-  authMiddleware, 
+  "/jugador/estadisticas/:id",
+  authMiddleware,
+  estadisticasController.obtenerEstadisticasJugador
+);
+
+router.get(
+  "/jugador/entrenamientos/:id",
+  authMiddleware,
   sesionEntrenamientoController.obtenerEntrenamientosPorJugador
 );
 
-// Obtener jugador por ID de usuario
+// 🔹 Player lookup by user ID
 router.get(
   "/jugador/usuario/:id",
   authMiddleware,
   jugadorController.obtenerJugadorPorUsuario
 );
 
-// 🔹 Operaciones CRUD para administradores/entrenadores
-router.post("/jugador/crear",  jugadorController.crearJugador);
+// 🔹 CRUD operations for admins/coaches
+router.post(
+  "/jugador/crear",
+  authMiddleware,
+  roleMiddleware(["admin", "entrenador"]),
+  jugadorController.crearJugador
+);
 
 router.get(
   "/jugador/:id",
   authMiddleware,
   roleMiddleware(["admin", "entrenador", "jugador"]),
-  jugadorController.verJugador,
+  jugadorController.verJugador
 );
 
 router.put(
-  "/jugador-info/:id", // Actualización completa (admin/jugador dueño)
+  "/jugador-info/:id", // Full update (admin or player owner)
   authMiddleware,
   verificarUsuarioOAdmin,
-  jugadorController.actualizarJugador,
+  jugadorController.actualizarJugador
 );
 
 router.put(
-  "/jugador/:id", // Solo capacidades físicas (admin/entrenador)
+  "/jugador/:id", // Physical capabilities only (admin/coach)
   authMiddleware,
   roleMiddleware(["admin", "entrenador"]),
-  jugadorController.actualizarCapacidadJugador,
+  jugadorController.actualizarCapacidadJugador
 );
 
 router.delete(
   "/jugador/:id",
   authMiddleware,
   roleMiddleware("admin"),
-  jugadorController.eliminarJugador,
+  jugadorController.eliminarJugador
 );
-
-// 🔹 Listado público (sin autenticación)
-router.get("/jugadores/ver", jugadorController.verJugadores);
 
 module.exports = router;
