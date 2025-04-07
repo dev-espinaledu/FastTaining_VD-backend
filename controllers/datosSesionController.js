@@ -17,15 +17,15 @@ const TomarDatosEntrenamiento = async (req, res) => {
 };
 
 const RegistrarDatosPosición = async (req, res) => {
-  const {id} = req.params;  
+  const {equipoId} = req.params;  
   const { fecha, objetivo, posicion } = req.body;  
 
   try {
-    console.log(id)
+    console.log(equipoId)
     console.log(posicion)
     const promedio = await Jugador.findOne({
       where:[
-        {equipo_id: id},
+        {equipo_id: equipoId},
         {posicion: posicion},
       ],
       attributes:[
@@ -33,7 +33,7 @@ const RegistrarDatosPosición = async (req, res) => {
         [sequelize.fn("AVG", sequelize.col("peso")), "promedioPeso"],
         [sequelize.fn("AVG", sequelize.col("porcentaje_grasa_corporal")), "promedioGrasaCorp"],
         [sequelize.fn("AVG", sequelize.col("porcentaje_masa_muscular")), "promedioMasaMus"], 
-        [sequelize.fn("AVG", sequelize.col("potencia_muscular_pierna")), "promedioPotencia"],
+        [sequelize.fn("AVG", sequelize.col("potencia_muscular_piernas")), "promedioPotencia"],
         [sequelize.fn("AVG", sequelize.col("velocidad_max")), "promedioVelocidad"],
         [sequelize.fn("AVG", sequelize.col("resistencia_aerobica")), "promedioResAerobica"],
         [sequelize.fn("AVG", sequelize.col("resistencia_anaerobica")), "promedioResAnaerobica"],
@@ -48,7 +48,7 @@ const RegistrarDatosPosición = async (req, res) => {
 
     if (promedio) {
       const newData = await DatoSesion.create({
-        equipo_id: id,
+        equipo_id: equipoId,
         fecha,
         objetivo,
         posicion,
@@ -56,7 +56,7 @@ const RegistrarDatosPosición = async (req, res) => {
         peso: promedio.promedioPeso,
         porcentaje_grasa_corporal: promedio.promedioGrasaCorp,
         porcentaje_masa_muscular: promedio.promedioMasaMus, 
-        potencia_muscular_pierna: promedio.promedioPotencia,
+        potencia_muscular_piernas: promedio.promedioPotencia,
         velocidad: promedio.promedioVelocidad,
         resistencia_aerobica: promedio.promedioResAerobica,
         resistencia_anaerobica: promedio.promedioResAnaerobica,

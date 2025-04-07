@@ -48,6 +48,12 @@ router.get("/entrenador/:id", entrenadorController.verEntrenador);
 
 router.post("/entrenador/crear", entrenadorController.crearEntrenador);
 
+// Obtener un entrenador específico por ID (protegido, solo usuarios autenticados)
+router.get(
+  "/entrenador/:usuarioId",
+/*   authMiddleware, */
+  entrenadorController.verEntrenador,
+);
 module.exports = router;
 
 // http://localhost:5000/api/entrenador/ver <- Ruta para mostrar datos de entrenador

@@ -1,5 +1,4 @@
-const {DatoSesion, Entrenamiento, Equipo, Jugador} = require("../models");
-
+const {DatoSesion, Entrenamiento, Equipo} = require("../models");
 require("dotenv").config();
 
 const generarEntrenamiento = async (req, res) => {
@@ -37,7 +36,7 @@ const generarEntrenamiento = async (req, res) => {
           - Posición en la cancha: ${sesion.posicion}
           - Grasa corporal: ${sesion.porcentaje_grasa_corporal}%
           - Masa muscular: ${sesion.porcentaje_masa_muscular}%
-          - Potencia muscular en piernas: ${sesion.potencia_mucular_pierna}
+          - Potencia muscular en piernas: ${sesion.potencia_mucular_piernas}
           - Velocidad máxima (30m): ${sesion.velocidad} s
           - Resistencia: ${sesion.resistencia} ml/kg/min
           - Resistencia aeróbica: ${sesion.resistencia_aerobica} ml/kg/min
@@ -116,6 +115,7 @@ const generarEntrenamiento = async (req, res) => {
     return res.status(500).json({ error: "Error generando entrenamiento" });
   }
 };
+
 
 //-------------------------------------
 

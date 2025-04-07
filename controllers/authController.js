@@ -36,6 +36,7 @@ exports.login = async (req, res) => {
         code: "USER_NOT_FOUND"
       });
     }
+    console.log(`Rol del usuario: ${user.rol_id}`);
 
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, usuario.password);
@@ -45,6 +46,22 @@ exports.login = async (req, res) => {
         message: "Credenciales inválidas",
         code: "INVALID_CREDENTIALS"
       });
+      if (!intentosFallidos[email]) {
+        intentosFallidos[email] = { intentos: 1, primerIntento: Date.now() };
+      } else {
+        intentosFallidos[email].intentos++;
+      }
+      return res.status(401).json({ message: "Credenciales inválidas" });
+    }
+    
+
+    // Restablecer intentos fallidos
+    delete intentosFallidos[email];
+
+    // Obtener el rol del usuario
+    const rol = await Rol.findByPk(user.rol_id);
+    if (!rol) {
+      return res.status(500).json({ message: "Error: Rol no encontrado" });
     }
 
     // Generar token JWT
@@ -71,6 +88,7 @@ exports.login = async (req, res) => {
       }
     });
 
+    res.json({ message: "Login exitoso",id:user.id , token, role: user.rol_id });
   } catch (error) {
     console.error("Error en login:", error);
     res.status(500).json({ 
