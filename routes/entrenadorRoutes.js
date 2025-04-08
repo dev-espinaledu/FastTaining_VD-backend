@@ -3,26 +3,43 @@ const router = express.Router();
 const entrenadorController = require("../controllers/entrenadorController");
 const {
   authMiddleware,
+  verificarAdmin,
   verificarEntrenador,
+  verificarUsuarioOAdmin,
 } = require("../middlewares/authMiddleware");
+const {
+  validateProfileData,
+  validateImage,
+} = require("../middlewares/validationMiddleware");
 
-// Obtener todos los entrenadores (protegido, solo usuarios autenticados)
+// 🔹 Perfil del entrenador actual (requiere autenticación y rol entrenador)
 router.get(
-  "/entrenador/ver",
+  "/entrenador/perfil/:id",
   authMiddleware,
-  entrenadorController.verEntrenadores,
+  verificarEntrenador,
+  entrenadorController.verPerfil,
 );
 
-// Crear un nuevo entrenador (protegido, solo entrenadores pueden hacerlo)
+// Obtener entrenador por ID de usuario
+router.get(
+  "/entrenador/usuario/:id",
+  authMiddleware,
+  entrenadorController.obtenerEntrenadorPorUsuario
+);
+
+router.put(
+  "/entrenador/perfil",
+  authMiddleware,
+  verificarEntrenador,
+  validateProfileData,
+  validateImage,
+  entrenadorController.actualizarPerfil,
+);
+
+router.get("/entrenador/:id", entrenadorController.verEntrenador);
+
 router.post("/entrenador/crear", entrenadorController.crearEntrenador);
 
-// Obtener un entrenador específico por ID (protegido, solo usuarios autenticados)
-router.get(
-  "/entrenador/:id",
-  authMiddleware,
-  entrenadorController.verEntrenador,
-);
-router.get("/entrenador/:id", entrenadorController.verEntrenador);
 module.exports = router;
 
 // http://localhost:5000/api/entrenador/ver <- Ruta para mostrar datos de entrenador

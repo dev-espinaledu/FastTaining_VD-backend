@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "equipo_id",
         as: "jugadores",
       });
+      Equipo.hasMany(models.DatoSesion, {
+        foreignKey: "equipo_id",
+        as: "datos_sesions",
+      });
     }
   }
   Equipo.init(
@@ -23,12 +27,14 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       escudo_url: DataTypes.STRING,
-      descripcion: DataTypes.STRING
+      descripcion: DataTypes.STRING,
+
     },
     {
       sequelize,
       modelName: "Equipo",
       tableName: "equipos",
+      categoria: DataTypes.ENUM('Sub-13','Sub-15','Sub-17','Sub-20'),
     },
   );
   return Equipo;

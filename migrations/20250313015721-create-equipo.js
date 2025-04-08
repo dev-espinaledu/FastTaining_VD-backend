@@ -29,6 +29,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
+      categoria: {
+        type: Sequelize.ENUM('Sub-13','Sub-15','Sub-17','Sub-20'),
+        allowNull:true,
+      },
     });
   },
   async down(queryInterface, Sequelize) {

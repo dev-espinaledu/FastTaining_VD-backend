@@ -3,71 +3,68 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable("historial_datos", {
+    await queryInterface.createTable("promedio_datos", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.SMALLINT,
       },
-      jugador_id:{
+      equipo_id:{
         type:Sequelize.SMALLINT,
         allowNull: false,
-        references:{model:"jugadores", key:"id"},
+        references:{model:"equipos", key:"id"},        
       },
-      fecha_registro: {
-        type: Sequelize.DATE,
-        allowNull:false
+      fecha_registro:{
+        allowNull:true,
+        type: Sequelize.DATE
       },
-      altura: {
-        type: Sequelize.SMALLINT,
+      altura_prom: {
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
-      peso: {
+      peso_prom: {
         type: Sequelize.STRING,
         allowNull:true
       },
-      porcentaje_grasa_corporal: {
+      grasa_corporal_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
-      porcentaje_masa_muscular: {
+      masa_muscular_prom: {
         type: Sequelize.DOUBLE,
         allowNull:true
       }, 
-      fuerza: {
-        type: Sequelize.SMALLINT,
+      potencia_muscular_prom: {
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
-      velocidad_max: {
-        type: Sequelize.SMALLINT,
+      velocidad_prom: {
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
-      resistencia_aerobica: {
-        type: Sequelize.SMALLINT,
+      resistencia_aerobica_prom: {
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
-      resistencia_anaerobica: {
-        type: Sequelize.SMALLINT,
+      resistencia_anaerobica_prom: {
+        type: Sequelize.DOUBLE,
         allowNull:true
       },
-      flexibilidad: {
+      flexibilidad_prom: {
         type: Sequelize.DOUBLE,
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
       },
     });
   },
-
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('historial_datos'); 
-  }
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("promedio_datos");
+  },
 };
