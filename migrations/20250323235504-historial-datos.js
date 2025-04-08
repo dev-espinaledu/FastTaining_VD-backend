@@ -35,7 +35,7 @@ module.exports = {
         type: Sequelize.DOUBLE,
         allowNull:true
       }, 
-      fuerza: {
+      potencia_muscular_piernas: {
         type: Sequelize.SMALLINT,
         allowNull:true
       },

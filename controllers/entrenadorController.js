@@ -298,6 +298,52 @@ const actualizarPerfil = async (req, res) => {
   }
 };
 
+const verificarPerfilCompleto = async (req, res) => {
+  try {
+    const usuarioId = req.user.id; // Obtiene el ID del token
+
+    const entrenador = await Entrenador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: 'usuarios',
+          include: [
+            {
+              model: Persona,
+              as: 'personas',
+              attributes: ['nombre', 'apellido', 'telefono']
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
+      return res.json({ 
+        success: true,
+        profileComplete: false
+      });
+    }
+
+    const { nombre, apellido, telefono } = entrenador.usuarios.personas;
+    const camposRequeridos = { nombre, apellido, telefono };
+    const perfilCompleto = Object.values(camposRequeridos).every(val => val);
+
+    res.json({ 
+      success: true,
+      profileComplete: perfilCompleto
+    });
+
+  } catch (error) {
+    console.error("Error verificando perfil:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al verificar perfil"
+    });
+  }
+};
+
 const obtenerEntrenadorPorUsuario = async (req, res) => {
   const { id } = req.params;
   const entrenador = await Entrenador.findOne({ where: { usuario_id: id } });
@@ -311,5 +357,6 @@ module.exports = {
   actualizarEntrenador, 
   verPerfil, 
   actualizarPerfil,
+  verificarPerfilCompleto,
   obtenerEntrenadorPorUsuario
 };

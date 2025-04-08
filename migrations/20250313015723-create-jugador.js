@@ -45,7 +45,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull:true
       },
-      potencia_muscular_pierna: {
+      potencia_muscular_piernas: {
         type: Sequelize.DOUBLE,
         allowNull:true
       },
