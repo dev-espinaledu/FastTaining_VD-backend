@@ -7,8 +7,8 @@ const router = express.Router();
  
 
 router.post('/equipos', upload.single('file'), createTeam);
-console.log("✅ Ruta cargada correctamente");
+console.log("Ruta cargada correctamente ✅");
 
-router.get('/', getTeams);
+router.get('/crearequipos', getTeams);
 
 module.exports = router;
