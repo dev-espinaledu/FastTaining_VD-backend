@@ -566,15 +566,19 @@ const verificarPerfilCompleto = async (req, res) => {
   }
 };
 
-// Función para obtener un jugador por su usuario, usada en el JugadorDataContext
+// Función para obtener el id de un jugador con su Idusuario, usada en el JugadorDataContext
 const obtenerJugadorPorUsuario = async (req, res) => {
   try {
+    console.log("Obteniendo jugador por usuario");
     const { id } = req.params;
+    console.log("ID del usuario:", id);
 
     const jugador = await Jugador.findOne({
       where: { usuario_id: id },
       attributes: ["id"],
     });
+    console.log("Jugador encontrado:", jugador);
+    console.log("Jugador id:", jugador.id);
 
     if (!jugador) {
       return res.status(404).json({
@@ -586,7 +590,7 @@ const obtenerJugadorPorUsuario = async (req, res) => {
 
     res.json({
       success: true,
-      data: { id: jugador.id },
+      id: jugador.id,
     });
   } catch (error) {
     console.error("Error al obtener jugador por usuario:", error);

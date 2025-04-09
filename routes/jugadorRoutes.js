@@ -16,9 +16,9 @@ const {
 // 🔹 Public routes (no authentication required)
 router.get("/jugadores/ver", jugadorController.verJugadores);
 
-// 🔹 Player profile routes (requires player authentication)
+// 🔹 Player profile routes (requires player authentication), mira el perfil del jugador, se usa en JugadorDataContext del frontend para obtener los datos del jugador
 router.get(
-  "/jugador/perfil",
+  "/jugador/perfil/:id",
   authMiddleware,
   roleMiddleware("jugador"),
   jugadorController.verPerfil,
