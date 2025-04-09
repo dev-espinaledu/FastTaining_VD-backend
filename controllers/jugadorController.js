@@ -14,16 +14,16 @@ const verJugadores = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-              attributes: ["nombre", "apellido", "telefono"]
-            }
-          ]
-        }
-      ]
+              attributes: ["nombre", "apellido", "telefono"],
+            },
+          ],
+        },
+      ],
     });
 
     res.json({
       success: true,
-      data: jugadores.map(j => ({
+      data: jugadores.map((j) => ({
         id: j.id,
         nombre: j.usuarios?.personas?.nombre || "Desconocido",
         apellido: j.usuarios?.personas?.apellido || "Desconocido",
@@ -32,15 +32,15 @@ const verJugadores = async (req, res) => {
         fecha_nacimiento: j.fecha_nacimiento,
         posicion: j.posicion,
         altura: j.altura,
-        peso: j.peso
-      }))
+        peso: j.peso,
+      })),
     });
   } catch (error) {
     console.error("Error al obtener jugadores:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener jugadores",
-      code: "FETCH_PLAYERS_ERROR"
+      code: "FETCH_PLAYERS_ERROR",
     });
   }
 };
@@ -57,18 +57,18 @@ const verJugador = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-              attributes: ["nombre", "apellido", "telefono"]
-            }
-          ]
-        }
-      ]
+              attributes: ["nombre", "apellido", "telefono"],
+            },
+          ],
+        },
+      ],
     });
 
     if (!jugador) {
       return res.status(404).json({
         success: false,
         message: "Jugador no encontrado",
-        code: "PLAYER_NOT_FOUND"
+        code: "PLAYER_NOT_FOUND",
       });
     }
 
@@ -83,15 +83,15 @@ const verJugador = async (req, res) => {
         fecha_nacimiento: jugador.fecha_nacimiento,
         posicion: jugador.posicion,
         altura: jugador.altura,
-        peso: jugador.peso
-      }
+        peso: jugador.peso,
+      },
     });
   } catch (error) {
     console.error("Error al obtener jugador:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener jugador",
-      code: "FETCH_PLAYER_ERROR"
+      code: "FETCH_PLAYER_ERROR",
     });
   }
 };
@@ -117,7 +117,7 @@ const crearJugador = async (req, res) => {
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,
-      flexibilidad
+      flexibilidad,
     } = req.body;
 
     if (!email || !pass) {
@@ -125,7 +125,7 @@ const crearJugador = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Email y contraseña son obligatorios",
-        code: "MISSING_REQUIRED_FIELDS"
+        code: "MISSING_REQUIRED_FIELDS",
       });
     }
 
@@ -135,7 +135,7 @@ const crearJugador = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "El correo ya está registrado",
-        code: "EMAIL_ALREADY_EXISTS"
+        code: "EMAIL_ALREADY_EXISTS",
       });
     }
 
@@ -143,7 +143,7 @@ const crearJugador = async (req, res) => {
 
     const persona = await Persona.create(
       { nombre, apellido, telefono },
-      { transaction: t }
+      { transaction: t },
     );
 
     const usuario = await Usuario.create(
@@ -151,9 +151,9 @@ const crearJugador = async (req, res) => {
         email,
         password,
         persona_id: persona.id,
-        rol_id: 3
+        rol_id: 3,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     const jugador = await Jugador.create(
@@ -171,9 +171,9 @@ const crearJugador = async (req, res) => {
         resistencia_anaerobica,
         flexibilidad,
         equipo_id,
-        usuario_id: usuario.id
+        usuario_id: usuario.id,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -187,8 +187,8 @@ const crearJugador = async (req, res) => {
         email,
         posicion,
         altura,
-        peso
-      }
+        peso,
+      },
     });
   } catch (error) {
     await t.rollback();
@@ -196,7 +196,7 @@ const crearJugador = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al crear jugador",
-      code: "CREATE_PLAYER_ERROR"
+      code: "CREATE_PLAYER_ERROR",
     });
   }
 };
@@ -220,7 +220,7 @@ const actualizarJugador = async (req, res) => {
       potencia_muscular_piernas,
       velocidad,
       potencia,
-      equipo_id
+      equipo_id,
     } = req.body;
 
     const jugador = await Jugador.findByPk(id, {
@@ -231,12 +231,12 @@ const actualizarJugador = async (req, res) => {
           include: [
             {
               model: Persona,
-              as: "personas"
-            }
-          ]
-        }
+              as: "personas",
+            },
+          ],
+        },
       ],
-      transaction: t
+      transaction: t,
     });
 
     if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
@@ -244,13 +244,13 @@ const actualizarJugador = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Jugador no encontrado",
-        code: "PLAYER_NOT_FOUND"
+        code: "PLAYER_NOT_FOUND",
       });
     }
 
     await jugador.usuarios.personas.update(
       { nombre, apellido, telefono },
-      { transaction: t }
+      { transaction: t },
     );
 
     if (email) {
@@ -273,15 +273,15 @@ const actualizarJugador = async (req, res) => {
         potencia_muscular_piernas,
         velocidad,
         potencia,
-        equipo_id
+        equipo_id,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
     res.json({
       success: true,
-      message: "Jugador actualizado correctamente"
+      message: "Jugador actualizado correctamente",
     });
   } catch (error) {
     await t.rollback();
@@ -289,7 +289,7 @@ const actualizarJugador = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al actualizar jugador",
-      code: "UPDATE_PLAYER_ERROR"
+      code: "UPDATE_PLAYER_ERROR",
     });
   }
 };
@@ -309,7 +309,7 @@ const actualizarCapacidadJugador = async (req, res) => {
       velocidad_max,
       resistencia_aerobica,
       resistencia_anaerobica,
-      flexibilidad
+      flexibilidad,
     } = req.body;
 
     const jugador = await Jugador.findByPk(id, { transaction: t });
@@ -319,7 +319,7 @@ const actualizarCapacidadJugador = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Jugador no encontrado",
-        code: "PLAYER_NOT_FOUND"
+        code: "PLAYER_NOT_FOUND",
       });
     }
 
@@ -335,15 +335,15 @@ const actualizarCapacidadJugador = async (req, res) => {
         velocidad_max,
         resistencia_aerobica,
         resistencia_anaerobica,
-        flexibilidad
+        flexibilidad,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
     res.json({
       success: true,
-      message: "Datos físicos del jugador actualizados"
+      message: "Datos físicos del jugador actualizados",
     });
   } catch (error) {
     await t.rollback();
@@ -351,7 +351,7 @@ const actualizarCapacidadJugador = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al actualizar capacidad del jugador",
-      code: "UPDATE_PLAYER_CAPACITY_ERROR"
+      code: "UPDATE_PLAYER_CAPACITY_ERROR",
     });
   }
 };
@@ -367,16 +367,16 @@ const eliminarJugador = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Jugador no encontrado",
-        code: "PLAYER_NOT_FOUND"
+        code: "PLAYER_NOT_FOUND",
       });
     }
 
     await jugador.destroy({ transaction: t });
     await t.commit();
-    
+
     res.json({
       success: true,
-      message: "Jugador eliminado correctamente"
+      message: "Jugador eliminado correctamente",
     });
   } catch (error) {
     await t.rollback();
@@ -384,7 +384,7 @@ const eliminarJugador = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al eliminar jugador",
-      code: "DELETE_PLAYER_ERROR"
+      code: "DELETE_PLAYER_ERROR",
     });
   }
 };
@@ -404,18 +404,18 @@ const verPerfil = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-              attributes: ["nombre", "apellido", "telefono"]
-            }
-          ]
-        }
-      ]
+              attributes: ["nombre", "apellido", "telefono"],
+            },
+          ],
+        },
+      ],
     });
 
     if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
       return res.status(404).json({
         success: false,
         message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND"
+        code: "PROFILE_NOT_FOUND",
       });
     }
 
@@ -425,15 +425,15 @@ const verPerfil = async (req, res) => {
         nombre: jugador.usuarios.personas.nombre,
         apellido: jugador.usuarios.personas.apellido,
         telefono: jugador.usuarios.personas.telefono,
-        fecha_nacimiento: jugador.fecha_nacimiento
-      }
+        fecha_nacimiento: jugador.fecha_nacimiento,
+      },
     });
   } catch (error) {
     console.error("Error al obtener perfil:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener perfil",
-      code: "FETCH_PROFILE_ERROR"
+      code: "FETCH_PROFILE_ERROR",
     });
   }
 };
@@ -450,7 +450,7 @@ const actualizarPerfil = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Nombre y apellido son obligatorios",
-        code: "MISSING_REQUIRED_FIELDS"
+        code: "MISSING_REQUIRED_FIELDS",
       });
     }
 
@@ -459,7 +459,7 @@ const actualizarPerfil = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Formato de teléfono inválido",
-        code: "INVALID_PHONE_FORMAT"
+        code: "INVALID_PHONE_FORMAT",
       });
     }
 
@@ -472,12 +472,12 @@ const actualizarPerfil = async (req, res) => {
           include: [
             {
               model: Persona,
-              as: "personas"
-            }
-          ]
-        }
+              as: "personas",
+            },
+          ],
+        },
       ],
-      transaction: t
+      transaction: t,
     });
 
     if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
@@ -485,26 +485,23 @@ const actualizarPerfil = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND"
+        code: "PROFILE_NOT_FOUND",
       });
     }
 
     await jugador.usuarios.personas.update(
       { nombre, apellido, telefono },
-      { transaction: t }
+      { transaction: t },
     );
 
     if (fecha_nacimiento) {
-      await jugador.update(
-        { fecha_nacimiento },
-        { transaction: t }
-      );
+      await jugador.update({ fecha_nacimiento }, { transaction: t });
     }
 
     await t.commit();
     res.json({
       success: true,
-      message: "Perfil actualizado correctamente"
+      message: "Perfil actualizado correctamente",
     });
   } catch (error) {
     await t.rollback();
@@ -512,7 +509,7 @@ const actualizarPerfil = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al actualizar perfil",
-      code: "UPDATE_PROFILE_ERROR"
+      code: "UPDATE_PROFILE_ERROR",
     });
   }
 };
@@ -531,71 +528,72 @@ const verificarPerfilCompleto = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-              attributes: ["nombre", "apellido", "telefono"]
-            }
-          ]
-        }
-      ]
+              attributes: ["nombre", "apellido", "telefono"],
+            },
+          ],
+        },
+      ],
     });
 
     if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
       return res.json({
         success: true,
-        profileComplete: false
+        profileComplete: false,
       });
     }
 
     const { nombre, apellido, telefono } = jugador.usuarios.personas;
-    const camposRequeridos = { 
-      nombre, 
-      apellido, 
+    const camposRequeridos = {
+      nombre,
+      apellido,
       telefono,
-      fecha_nacimiento: jugador.fecha_nacimiento 
+      fecha_nacimiento: jugador.fecha_nacimiento,
     };
-    
-    const perfilCompleto = Object.values(camposRequeridos).every(val => val);
+
+    const perfilCompleto = Object.values(camposRequeridos).every((val) => val);
 
     res.json({
       success: true,
-      profileComplete: perfilCompleto
+      profileComplete: perfilCompleto,
     });
   } catch (error) {
     console.error("Error verificando perfil:", error);
     res.status(500).json({
       success: false,
       message: "Error al verificar perfil",
-      code: "CHECK_PROFILE_ERROR"
+      code: "CHECK_PROFILE_ERROR",
     });
   }
 };
 
+// Función para obtener un jugador por su usuario, usada en el JugadorDataContext
 const obtenerJugadorPorUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const jugador = await Jugador.findOne({
       where: { usuario_id: id },
-      attributes: ['id']
+      attributes: ["id"],
     });
 
     if (!jugador) {
       return res.status(404).json({
         success: false,
         message: "Jugador no encontrado",
-        code: "PLAYER_NOT_FOUND"
+        code: "PLAYER_NOT_FOUND",
       });
     }
 
     res.json({
       success: true,
-      data: { id: jugador.id }
+      data: { id: jugador.id },
     });
   } catch (error) {
     console.error("Error al obtener jugador por usuario:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener jugador",
-      code: "FETCH_PLAYER_ERROR"
+      code: "FETCH_PLAYER_ERROR",
     });
   }
 };
@@ -610,5 +608,5 @@ module.exports = {
   verPerfil,
   actualizarPerfil,
   verificarPerfilCompleto,
-  obtenerJugadorPorUsuario
+  obtenerJugadorPorUsuario,
 };

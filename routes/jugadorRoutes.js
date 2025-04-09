@@ -21,14 +21,14 @@ router.get(
   "/jugador/perfil",
   authMiddleware,
   roleMiddleware("jugador"),
-  jugadorController.verPerfil
+  jugadorController.verPerfil,
 );
 
 router.get(
   "/jugador/verificar-perfil",
   authMiddleware,
   roleMiddleware("jugador"),
-  jugadorController.verificarPerfilCompleto
+  jugadorController.verificarPerfilCompleto,
 );
 
 router.put(
@@ -36,27 +36,27 @@ router.put(
   authMiddleware,
   roleMiddleware("jugador"),
   validateProfileData,
-  jugadorController.actualizarPerfil
+  jugadorController.actualizarPerfil,
 );
 
 // 🔹 Player statistics and training sessions
 router.get(
   "/jugador/estadisticas/:id",
   authMiddleware,
-  estadisticasController.obtenerEstadisticasJugador
+  estadisticasController.obtenerEstadisticasJugador,
 );
 
 router.get(
   "/jugador/entrenamientos/:id",
   authMiddleware,
-  sesionEntrenamientoController.obtenerEntrenamientosPorJugador
+  sesionEntrenamientoController.obtenerEntrenamientosPorJugador,
 );
 
-// 🔹 Player lookup by user ID
+// Obtiene el jugador por su ID de usuario, se usa en JugadorDataContext del frontend para saber el jugador actual
 router.get(
   "/jugador/usuario/:id",
   authMiddleware,
-  jugadorController.obtenerJugadorPorUsuario
+  jugadorController.obtenerJugadorPorUsuario,
 );
 
 // 🔹 CRUD operations for admins/coaches
@@ -64,35 +64,35 @@ router.post(
   "/jugador/crear",
   authMiddleware,
   roleMiddleware(["admin", "entrenador"]),
-  jugadorController.crearJugador
+  jugadorController.crearJugador,
 );
 
 router.get(
   "/jugador/:id",
   authMiddleware,
   roleMiddleware(["admin", "entrenador", "jugador"]),
-  jugadorController.verJugador
+  jugadorController.verJugador,
 );
 
 router.put(
   "/jugador-info/:id", // Full update (admin or player owner)
   authMiddleware,
   verificarUsuarioOAdmin,
-  jugadorController.actualizarJugador
+  jugadorController.actualizarJugador,
 );
 
 router.put(
   "/jugador/:id", // Physical capabilities only (admin/coach)
   authMiddleware,
   roleMiddleware(["admin", "entrenador"]),
-  jugadorController.actualizarCapacidadJugador
+  jugadorController.actualizarCapacidadJugador,
 );
 
 router.delete(
   "/jugador/:id",
   authMiddleware,
   roleMiddleware("admin"),
-  jugadorController.eliminarJugador
+  jugadorController.eliminarJugador,
 );
 
 module.exports = router;

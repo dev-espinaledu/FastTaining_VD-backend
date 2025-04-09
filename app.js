@@ -39,6 +39,7 @@ app.use("/api", datosSesion);
 app.use("/api", estadisticasRoutes);
 app.use("/api", usuarioRoutes);
 app.use("/api", personaRoutes);
+
 // ✅ Iniciar servidor en el puerto correcto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
