@@ -1,4 +1,3 @@
-// middlewares/validationMiddleware.js
 const validateProfileData = (req, res, next) => {
     const { nombre, apellido, telefono, fecha_nacimiento } = req.body;
     

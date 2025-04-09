@@ -12,7 +12,7 @@ router.get("/usuarios/:id", authMiddleware, usuarioController.obtenerUsuarioPorI
 router.put(
     "/usuarios/:id",
     authMiddleware,
-    upload.single("foto"),
+    upload.single("foto_perfil"),
     validateProfileData,
     validateImage,
     usuarioController.actualizarUsuario
