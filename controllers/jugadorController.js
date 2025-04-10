@@ -389,29 +389,39 @@ const eliminarJugador = async (req, res) => {
   }
 };
 
+// Función auxiliar para buscar jugador y validar relaciones
+const obtenerJugadorConUsuario = async (usuarioId) => {
+  const jugador = await Jugador.findOne({
+    where: { usuario_id: usuarioId },
+    include: [
+      {
+        model: Usuario,
+        as: "usuarios",
+        include: [
+          {
+            model: Persona,
+            as: "personas",
+            attributes: ["nombre", "apellido", "telefono"],
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
+    return null;
+  }
+
+  return jugador;
+};
+
 // Funciones específicas para el perfil
 const verPerfil = async (req, res) => {
   try {
     const usuarioId = req.user.id;
+    const jugador = await obtenerJugadorConUsuario(usuarioId);
 
-    const jugador = await Jugador.findOne({
-      where: { usuario_id: usuarioId },
-      include: [
-        {
-          model: Usuario,
-          as: "usuarios",
-          include: [
-            {
-              model: Persona,
-              as: "personas",
-              attributes: ["nombre", "apellido", "telefono"],
-            },
-          ],
-        },
-      ],
-    });
-
-    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
+    if (!jugador) {
       return res.status(404).json({
         success: false,
         message: "Perfil no encontrado",
@@ -516,26 +526,10 @@ const actualizarPerfil = async (req, res) => {
 
 const verificarPerfilCompleto = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
+    const userId = req.params.userId
+    const jugador = await obtenerJugadorConUsuario(userId);
 
-    const jugador = await Jugador.findOne({
-      where: { usuario_id: usuarioId },
-      include: [
-        {
-          model: Usuario,
-          as: "usuarios",
-          include: [
-            {
-              model: Persona,
-              as: "personas",
-              attributes: ["nombre", "apellido", "telefono"],
-            },
-          ],
-        },
-      ],
-    });
-
-    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
+    if (!jugador) {
       return res.json({
         success: true,
         profileComplete: false,
@@ -567,7 +561,7 @@ const verificarPerfilCompleto = async (req, res) => {
 };
 
 // Función para obtener el id de un jugador con su Idusuario, usada en el JugadorDataContext
-const obtenerJugadorPorUsuario = async (req, res) => {
+const obtenerIdJugadorConUsuario = async (req, res) => {
   try {
     console.log("Obteniendo jugador por usuario");
     const { id } = req.params;
@@ -612,5 +606,5 @@ module.exports = {
   verPerfil,
   actualizarPerfil,
   verificarPerfilCompleto,
-  obtenerJugadorPorUsuario,
+  obtenerIdJugadorConUsuario,
 };

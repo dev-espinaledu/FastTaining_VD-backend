@@ -25,7 +25,7 @@ router.get(
 );
 
 router.get(
-  "/jugador/verificar-perfil",
+  "/jugador/verificar-perfil/:userId",
   authMiddleware,
   roleMiddleware("jugador"),
   jugadorController.verificarPerfilCompleto,
@@ -39,7 +39,7 @@ router.put(
   jugadorController.actualizarPerfil,
 );
 
-// 🔹 Player statistics and training sessions
+// Estadisticas del jugador y entrenamientos
 router.get(
   "/jugador/estadisticas/:id",
   authMiddleware,
@@ -56,10 +56,10 @@ router.get(
 router.get(
   "/jugador/usuario/:id",
   authMiddleware,
-  jugadorController.obtenerJugadorPorUsuario,
+  jugadorController.obtenerIdJugadorConUsuario,
 );
 
-// 🔹 CRUD operations for admins/coaches
+// Operaciones CRUD para el administarador
 router.post(
   "/jugador/crear",
   authMiddleware,
