@@ -5,24 +5,24 @@ const { authMiddleware } = require("../middlewares/authMiddleware");
 const { validateProfileData, validateImage } = require("../middlewares/validationMiddleware");
 const upload = require("../middlewares/upload");
 
-// Obtener usuario por ID
-router.get("/usuarios/:id", authMiddleware, usuarioController.obtenerUsuarioPorId);
+// Obtener información del usuario actual
+router.get("/usuario", authMiddleware, usuarioController.obtenerUsuarioActual);
 
 // Actualizar información del usuario
 router.put(
-    "/usuarios/:id",
-    authMiddleware,
-    upload.single("foto_perfil"),
-    validateProfileData,
-    validateImage,
-    usuarioController.actualizarUsuario
+  "/usuario",
+  authMiddleware,
+  upload.single("foto_perfil"),
+  validateProfileData,
+  validateImage,
+  usuarioController.actualizarUsuario
 );
 
 // Cambiar contraseña
 router.put(
-    "/usuarios/:id/password",
-    authMiddleware,
-    usuarioController.cambiarContrasena
+  "/usuario/password",
+  authMiddleware,
+  usuarioController.cambiarContrasena
 );
 
 module.exports = router;

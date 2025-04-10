@@ -67,7 +67,7 @@ const actualizarPersona = async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido, telefono } = req.body;
 
-    // Validar que el usuario solo pueda actualizar su propio perfil
+    // Validar permisos
     if (req.user.id != id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -94,7 +94,6 @@ const actualizarPersona = async (req, res) => {
       });
     }
 
-    // Construir objeto de actualización
     const updateData = { nombre, apellido, telefono };
 
     // Manejar la imagen si se subió
