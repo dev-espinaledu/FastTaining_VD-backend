@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config(); // Cargar variables de entorno
+
 const jugadores = require("./routes/jugadorRoutes");
 const rol = require("./routes/rolRoutes");
 const entrenadorRoutes = require("./routes/entrenadorRoutes");
@@ -8,6 +9,7 @@ const datosSesion = require("./routes/datosEntrenamientoRoutes");
 const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
 const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
+const usuarioRoutes= require("./routes/usuarioRoutes")
 const app = express();
 
 // Middleware para parsear JSON
@@ -30,13 +32,11 @@ app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
 app.use("/api", entrenamientoRoutes);
 app.use("/api", datosSesion);
-
+app.use("/api", usuarioRoutes)
 
 
 // Iniciar el servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Servidor en puerto ${PORT}`);
-
-
 });

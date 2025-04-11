@@ -1,120 +1,128 @@
 const { Persona, Usuario, Jugador, Entrenador, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+const {correoContraseña}=require('../utils/EmailPasword')
+
+dotenv.config();
+
+function generarPasswordAzar(){
+  //Lista de caracteres que van dentro de la contraseña
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_+';
+  
+  //Variable en la que se almacenará la contraseña
+  let password = '';
+  const longitud= 11;
+
+  for (let i = 0; i < longitud; i++) {
+    password += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return password;
+}
 
 
+
+//-------------------------------------------------------------------------------------------
 const CrearUsuario = async (req,res)=>{
+  const {email, rol}= req.body;
+  const t = await sequelize.transaction(); 
+
   try{
 
-  }catch(e){
-    console.log()
-    return res.status(500).json({mjs:`Error desde el método CrearUsuario ${e}`})
-  }
-}
-exports.crearJugador = async (req, res) => {
-  const t = await sequelize.transaction(); // Iniciar transacción
-
-  const {
-    nombre,
-    apellido,
-    telefono,
-    email,
-    pass,
-    equipo_id,
-    fecha_nacimiento,
-    altura,
-    peso,
-    posicion,
-    porcentaje_grasa_corporal,
-    porcentaje_masa_muscular,
-    tipo_cuerpo,
-    potencia_muscular_piernas,
-    velocidad_max,
-    resistencia_aerobica,
-    resistencia_anaerobica,
-    flexibilidad,
-  } = req.body;
-  try {
-    // Validaciones básicas
-    if (
-      !nombre ||
-      !apellido ||
-      !email ||
-      !pass ||
-      !fecha_nacimiento ||
-      !posicion
-    ) {
-      return res.status(400).json({ error: "Faltan datos obligatorios" });
+    if (!email || !rol) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+    //Verifica que el usuario no existe 
+    const exist = await Usuario.findOne({where:{email}});
+    if (exist){
+      return res.status(400).json({ error: "El correo ya está registrado" })
     }
 
-    // Verificar si el email ya está en uso
-    const emailExiste = await Usuario.findOne({ where: { email } });
-    if (emailExiste) {
-      return res.status(400).json({ error: "El correo ya está registrado" });
+    //Rol id
+    const roles = {
+      administrador: 1,
+      entrenador: 2,
+      jugador: 3,
+    };
+    
+    const rol_id = roles[rol.toLowerCase()];
+    if (!rol_id) {
+      return res.status(400).json({ error: "Rol inválido" });
     }
 
-    // Encriptar contraseña
-    const password = await bcrypt.hash(pass, 10);
+    //Crear la contraseña del usuario al azar
+    const passAleatorea = generarPasswordAzar(); // Contraseña aleatorea creada por la función anterior
+    const hashedPassword = await bcrypt.hash(passAleatorea, 10);
 
-    // Crear Persona
+    //Enviar correo
+
+    //Crear el id de persona
     const persona = await Persona.create(
-      { nombre, apellido, telefono },
+      { nombre: null, apellido:null, telefono: null  },
       { transaction: t },
     );
-
-    // Crear Usuario
+    //Crear el usuario 
     const usuario = await Usuario.create(
       {
         email,
-        password,
+        password:hashedPassword,
         persona_id: persona.id,
-        rol_id: 3, // Suponiendo que "3" es el rol de jugador
+        rol_id, // Rol asignador
       },
       { transaction: t },
     );
 
-    // Crear Jugador y asociarlo al usuario
-    const jugador = await Jugador.create(
-      {
-        fecha_nacimiento,
-        altura,
-        peso,
-        posicion,
-        porcentaje_grasa_corporal,
-        porcentaje_masa_muscular,
-        tipo_cuerpo,
-        potencia_muscular_piernas,
-        velocidad_max,
-        resistencia_aerobica,
-        resistencia_anaerobica,
-        flexibilidad,
-        equipo_id,
-        usuario_id: usuario.id, // Asociar con el usuario recién creado
-      },
-      { transaction: t },
-    );
+    let data ={}
+    //Crear jugador o entrenador
+    if(rol_id ==2){
+      const entrenador = await Entrenador.create(
+        {usuario_id: usuario.id},
+        { transaction: t }
+      );
+      data ={entrenador};
+    }else if(rol_id ==3){
+      const jugador = await Jugador.create(
+        {usuario_id: usuario.id},
+        { transaction: t }
+      );
+      data ={jugador};
+    }
 
     // Confirmar transacción
+    console.log("Usuario creado correctamente");
+
+    await correoContraseña(email, passAleatorea);
+
+    res.json({
+      success: true,
+      message: "Correo de recuperación enviado",
+    });
     await t.commit();
 
-    return res.json({
-      message: "Jugador creado exitosamente",
-      jugador: {
-        id: jugador.id,
-        nombre,
-        apellido,
-        email,
-        posicion,
-        altura,
-        peso,
-      },
-    });
-  } catch (error) {
-    await t.rollback(); // Revertir cambios en caso de error
-    console.error(error);
-    return res.status(500).json({ error: "Error al crear jugador" });
+
+  }catch(e){
+    await t.rollback(); 
+    console.log("Error en CrearUsuario", e)
+    return res.status(500).json({mjs:`Error desde el método CrearUsuario ${e}`})
   }
-};
- 
+}
+
+//-------------------------------------------------------------------------------------------
+
+const VerUsuarios= async(req, res) =>{
+  try{
+    const usuarios = await Usuario.findAll({});
+    res.json(usuarios);
+  }catch(e){
+    console.log(`Error desde el método VerUsuarios ${e}`)
+    res.status(500).json({error:`Error desde el médoto VerUsuarios, ${e}`})
+  }
+}
+
+
+//-------------------------------------------------------------------------------------------
+
+module.exports= {CrearUsuario, VerUsuarios};
 
 /* 
 # Crear contenido del archivo de texto con los 10 comandos más importantes y 10 comandos raros pero útiles de Git
