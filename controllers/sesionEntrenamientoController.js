@@ -220,7 +220,7 @@ const verEntrenamientos = async (req, res) => {
         {
           model: DatoSesion,
           as: "datosSesion",
-          attributes: ["fecha", "objetivo"],
+          attributes: ["fecha", "objetivo","posicion","nombre_sesion"],
         },
       ],
     });
@@ -237,8 +237,9 @@ const verEntrenamientos = async (req, res) => {
       const datos = entrenamiento.datosSesion;
 
       return {
-        fecha: datos.fecha || "Fecha no disponible",
+        nombre:data.nombre_sesion || "Nombre sin definir ",
         objetivo: datos.objetivo || "Objetivo no disponible",
+        posicion: datos.posicion || "No encontrada",
         fase_inicial: entrenamiento.fase_inicial || [],
         fase_central: entrenamiento.fase_central || [],
         fase_final: entrenamiento.fase_final || [],
@@ -280,7 +281,7 @@ const obtenerEntrenamientosPorJugador = async (req, res) => {
           where: {
             posicion: jugador.posicion,
           },
-          attributes: ["fecha", "objetivo"],
+          attributes: ["fecha", "objetivo","nombre_sesion"],
         },
       ],
     });
