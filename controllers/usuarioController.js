@@ -1,8 +1,18 @@
-const { Usuario, Persona } = require("../models");
+const { Usuario, Persona, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 
-// Obtener información del usuario actual
-exports.obtenerUsuarioActual = async (req, res) => {
+const obtenerUsuarioPorId = async (req, res) => {
+  const { id } = req.params;
+  
+  // Verificar que el usuario autenticado solo pueda ver su propio perfil
+  if (req.user.id != id && req.user.role !== 1) {
+    return res.status(403).json({
+      success: false,
+      message: "No tienes permiso para acceder a este recurso",
+      code: "FORBIDDEN"
+    });
+  }
+
   try {
     const usuarioId = req.user.id;
 
@@ -47,9 +57,8 @@ exports.obtenerUsuarioActual = async (req, res) => {
   }
 };
 
-// Actualizar información del usuario
-exports.actualizarUsuario = async (req, res) => {
-  const usuarioId = req.user.id;
+const actualizarUsuario = async (req, res) => {
+  const { id } = req.params;
   const { nombre, apellido, telefono } = req.body;
 
   // Validar campos obligatorios
@@ -144,8 +153,7 @@ exports.actualizarUsuario = async (req, res) => {
   }
 };
 
-// Cambiar contraseña del usuario
-exports.cambiarContrasena = async (req, res) => {
+const cambiarContrasena = async (req, res) => {
   const { id } = req.params;
   const { contrasenaActual, nuevaContrasena, confirmacionContrasena } = req.body;
 
@@ -224,3 +232,116 @@ exports.cambiarContrasena = async (req, res) => {
     });
   }
 };
+
+const crearAdmin = async (req, res) => {
+  const { email, password, nombre, apellido, telefono } = req.body;
+
+  // Validar campos obligatorios
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email y contraseña son obligatorios",
+      code: "MISSING_REQUIRED_FIELDS",
+    });
+  }
+
+  // Validar formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: "Formato de email inválido",
+      code: "INVALID_EMAIL_FORMAT",
+    });
+  }
+
+  // Validar criterios de contraseña
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      success: false,
+      message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial",
+      code: "INVALID_PASSWORD_FORMAT",
+    });
+  }
+
+  // Validar que el email no esté ya registrado
+  const usuarioExistente = await Usuario.findOne({ where: { email } });
+  if (usuarioExistente) {
+    return res.status(400).json({
+      success: false,
+      message: "El email ya está registrado",
+      code: "EMAIL_ALREADY_REGISTERED",
+    });
+  }
+
+  const t = await sequelize.transaction(); // Iniciar transacción
+  try {
+    // Crear nuevo usuario administrador
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crear la entidad Persona
+    const persona = await Persona.create(
+      { nombre, apellido, telefono },
+      { transaction: t }
+    );
+
+    // Validar que la creación de Persona fue exitosa
+    if (!persona) {
+      await t.rollback();
+      return res.status(500).json({
+        success: false,
+        message: "Error al crear persona",
+        code: "PERSON_CREATION_ERROR",
+      });
+    }
+
+    // Crear la entidad Usuario
+    const nuevoUsuario = await Usuario.create(
+      {
+        email,
+        password: hashedPassword,
+        rol_id: 1, // Rol de administrador
+        persona_id: persona.id, // Relación con la persona creada
+      },
+      { transaction: t }
+    );
+
+    // Validar que la creación de Usuario fue exitosa
+    if (!nuevoUsuario) {
+      await t.rollback();
+      return res.status(500).json({
+        success: false,
+        message: "Error al crear usuario",
+        code: "USER_CREATION_ERROR",
+      });
+    }
+
+    await t.commit(); // Confirmar transacción
+
+    res.status(201).json({
+      success: true,
+      message: "Administrador creado correctamente",
+      data: {
+        id: nuevoUsuario.id,
+        email: nuevoUsuario.email,
+      },
+    });
+  } catch (error) {
+    await t.rollback(); // Revertir transacción en caso de error
+    console.error("Error al crear administrador:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR",
+    });
+  }
+};
+
+module.exports = {
+  obtenerUsuarioPorId,
+  actualizarUsuario,
+  cambiarContrasena,
+  crearAdmin
+};
+// Exportar las funciones para su uso en otras partes de la aplicación
