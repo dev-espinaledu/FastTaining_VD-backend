@@ -1,4 +1,4 @@
-const { Persona, Usuario, Jugador, Entrenador, sequelize } = require("../models");
+const { Usuario, Persona, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
@@ -59,7 +59,7 @@ const CrearUsuario = async (req,res)=>{
     //Crear el id de persona
     const persona = await Persona.create(
       { nombre: null, apellido:null, telefono: null  },
-      { transaction: t },
+      { transaction: t }
     );
     //Crear el usuario 
     const usuario = await Usuario.create(
@@ -69,7 +69,7 @@ const CrearUsuario = async (req,res)=>{
         persona_id: persona.id,
         rol_id, // Rol asignador
       },
-      { transaction: t },
+      { transaction: t }
     );
 
     let data ={}

@@ -1,5 +1,5 @@
-const { Entrenador, Persona, Usuario, sequelize } = require("../models"); // Agregar sequelize para transacciones
-const bcrypt = require("bcrypt");
+const { Entrenador, Persona, Usuario, sequelize } = require("../models");
+const bcrypt = require("bcryptjs");
 
 const verEntrenadores = async (req, res) => {
   try {
@@ -10,75 +10,92 @@ const verEntrenadores = async (req, res) => {
       ],
     });
     res.json(entrenadores);
-  } catch (e) {
-    res.status(500).json({ error: "Error al obtener entrenadores" });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener entrenadores",
+      code: "FETCH_TRAINERS_ERROR"
+    });
   }
 };
+
 const verEntrenador = async (req, res) => {
   try {
-    const { usuarioId } = req.params;
-
-    const entrenador = await Entrenador.findOne({
-      where: { usuario_id: usuarioId },
+    const { id } = req.params;
+    const entrenador = await Entrenador.findByPk(id, {
       include: [
-        {
-          model: Usuario,
-          as: "usuario", 
-          attributes: ["email"],
-/*           include: [{ model: Persona, as: "persona", attributes: ["nombre", "apellido", "telefono"] }], */
-        },
+        { model: Persona, attributes: ["nombre", "apellido", "telefono"] },
+        { model: Usuario, attributes: ["email"] },
       ],
-      attributes: ["id", "equipo_id"],
     });
 
     if (!entrenador) {
-      return res.status(404).json({ error: "Entrenador no encontrado" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Entrenador no encontrado",
+        code: "TRAINER_NOT_FOUND"
+      });
     }
 
-    res.json(entrenador);
-  } catch (e) {
-    console.error("Error al obtener entrenador:", e);
-    res.status(500).json({ error: "Error al obtener entrenador" });
+    res.json({ 
+      success: true,
+      data: entrenador 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener entrenador",
+      code: "FETCH_TRAINER_ERROR"
+    });
   }
 };
 
 const crearEntrenador = async (req, res) => {
-  const t = await sequelize.transaction(); // Iniciar la transacción
-
+  const t = await sequelize.transaction();
   try {
     const { nombre, apellido, email, pass, telefono, equipo_id } = req.body;
 
     const usuarioExistente = await Usuario.findOne({ where: { email } });
     if (usuarioExistente) {
-      await t.rollback(); // Revertir si ya existe
-      return res.status(400).json({ error: "El correo ya está registrado" });
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: "El correo ya está registrado",
+        code: "EMAIL_ALREADY_EXISTS"
+      });
     }
 
     const password = await bcrypt.hash(pass, 10);
 
-    // Crear registros dentro de la transacción
     const newPersona = await Persona.create(
       { nombre, apellido, telefono },
-      { transaction: t },
+      { transaction: t }
     );
 
     const newUsuario = await Usuario.create(
       { email, password, persona_id: newPersona.id, rol_id: 2 },
-      { transaction: t },
+      { transaction: t }
     );
 
     const newEntrenador = await Entrenador.create(
       { usuario_id: newUsuario.id, equipo_id },
-      { transaction: t },
+      { transaction: t }
     );
 
-    await t.commit(); // Confirmar transacción
-
-    res.status(201).json({ entrenador: newEntrenador });
-  } catch (e) {
-    await t.rollback(); // Revertir en caso de error
-    console.log(e);
-    res.status(500).json({ error: "Error al crear entrenador" });
+    await t.commit();
+    res.status(201).json({ 
+      success: true,
+      message: "Entrenador creado exitosamente",
+      data: newEntrenador 
+    });
+  } catch (error) {
+    await t.rollback();
+    res.status(500).json({ 
+      success: false,
+      message: "Error al crear entrenador",
+      code: "CREATE_TRAINER_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -92,7 +109,11 @@ const actualizarEntrenador = async (req, res) => {
     });
 
     if (!entrenador) {
-      return res.status(404).json({ error: "Entrenador no encontrado" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Entrenador no encontrado",
+        code: "TRAINER_NOT_FOUND"
+      });
     }
 
     await entrenador.Usuario.Persona.update({ nombre, apellido, telefono });
@@ -110,10 +131,232 @@ const actualizarEntrenador = async (req, res) => {
       await entrenador.update({ equipo_id });
     }
 
-    res.json({ mensaje: "Entrenador actualizado correctamente" });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.json({ 
+      success: true,
+      message: "Entrenador actualizado correctamente" 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: "Error al actualizar entrenador",
+      code: "UPDATE_TRAINER_ERROR",
+      error: error.message 
+    });
   }
 };
 
-module.exports = { verEntrenadores, crearEntrenador, verEntrenador };
+const verPerfil = async (req, res) => {
+  try {
+    const usuarioId = req.params.id;
+    
+    const entrenador = await Entrenador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: 'usuarios',
+          include: [
+            {
+              model: Persona,
+              as: 'personas',
+              attributes: ['id', 'nombre', 'apellido', 'telefono']
+            }
+          ],
+        },
+      ],
+    });
+
+    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Perfil no encontrado",
+        code: "PROFILE_NOT_FOUND"
+      });
+    }
+
+    const { nombre, apellido, telefono } = entrenador.usuarios.personas; // Acceder correctamente
+
+    const camposObligatorios = { nombre, apellido, telefono };
+    const faltantes = Object.entries(camposObligatorios)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+
+    if (faltantes.length > 0) {
+      return res.status(200).json({
+        success: true,
+        perfilCompleto: false,
+        message: "Falta completar información del perfil",
+        camposFaltantes: faltantes,
+        datos: { nombre, apellido, telefono }
+      });
+    }
+
+    return res.json({
+      success: true,
+      perfilCompleto: true,
+      message: "Perfil completo",
+      datos: { nombre, apellido, telefono }
+    });
+
+  } catch (error) {
+    console.error("Error al ver perfil:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: "Error al obtener perfil",
+      code: "FETCH_PROFILE_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const actualizarPerfil = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const usuarioId = req.user.id;
+    const { nombre, apellido, telefono } = req.body;
+
+    if (!nombre || !apellido) {
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: "Nombre y apellido son obligatorios",
+        code: "MISSING_REQUIRED_FIELDS",
+        fields: ['nombre', 'apellido']
+      });
+    }
+
+    if (telefono && !/^[0-9]{10,15}$/.test(telefono)) {
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: "Formato de teléfono inválido",
+        code: "INVALID_PHONE_FORMAT"
+      });
+    }
+
+    const entrenador = await Entrenador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: 'usuarios',
+          include: [
+            {
+              model: Persona,
+              as: 'personas',
+              attributes: ['id', 'nombre', 'apellido', 'telefono']
+            },
+          ],
+        },
+      ],
+      transaction: t
+    });
+
+    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
+      await t.rollback();
+      return res.status(404).json({ 
+        success: false,
+        message: "Perfil no encontrado",
+        code: "PROFILE_NOT_FOUND"
+      });
+    }
+
+    // Actualizar Persona usando update con where
+    await Persona.update(
+      {
+        nombre,
+        apellido,
+        telefono: telefono || entrenador.usuarios.personas.telefono
+      },
+      {
+        where: { id: entrenador.usuarios.personas.id },
+        transaction: t
+      }
+    );
+
+    await t.commit();
+    
+    return res.json({
+      success: true,
+      message: "Perfil actualizado correctamente",
+      data: {
+        nombre,
+        apellido,
+        telefono: telefono || entrenador.usuarios.personas.telefono
+      }
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error("Error al actualizar perfil:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error al actualizar perfil",
+      code: "PROFILE_UPDATE_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const verificarPerfilCompleto = async (req, res) => {
+  try {
+    const usuarioId = req.user.id; // Obtiene el ID del token
+
+    const entrenador = await Entrenador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: 'usuarios',
+          include: [
+            {
+              model: Persona,
+              as: 'personas',
+              attributes: ['nombre', 'apellido', 'telefono']
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
+      return res.json({ 
+        success: true,
+        profileComplete: false
+      });
+    }
+
+    const { nombre, apellido, telefono } = entrenador.usuarios.personas;
+    const camposRequeridos = { nombre, apellido, telefono };
+    const perfilCompleto = Object.values(camposRequeridos).every(val => val);
+
+    res.json({ 
+      success: true,
+      profileComplete: perfilCompleto
+    });
+
+  } catch (error) {
+    console.error("Error verificando perfil:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al verificar perfil"
+    });
+  }
+};
+
+const obtenerEntrenadorPorUsuario = async (req, res) => {
+  const { id } = req.params;
+  const entrenador = await Entrenador.findOne({ where: { usuario_id: id } });
+  res.json(entrenador);
+};
+
+module.exports = { 
+  verEntrenadores, 
+  crearEntrenador, 
+  verEntrenador, 
+  actualizarEntrenador, 
+  verPerfil, 
+  actualizarPerfil,
+  verificarPerfilCompleto,
+  obtenerEntrenadorPorUsuario
+};

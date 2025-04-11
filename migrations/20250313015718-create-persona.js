@@ -11,15 +11,15 @@ module.exports = {
       },
       nombre: {
         type: Sequelize.STRING,
-        allowNull:false
+        allowNull: true,
       },
       apellido: {
         type: Sequelize.STRING,
-        allowNull:false
+        allowNull: true,
       },
       telefono: {
         type: Sequelize.STRING,
-        allowNull:false
+        allowNull: true,
       },
       foto_perfil: {
         type: Sequelize.STRING,
