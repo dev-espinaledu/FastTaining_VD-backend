@@ -64,6 +64,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: "Error interno del servidor" });
 });
 
+console.log('Cloudinary Config:', {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY ? '*** set ***' : 'MISSING',
+  api_secret: process.env.CLOUDINARY_API_SECRET ? '*** set ***' : 'MISSING'
+});
+
 // Inicializar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
