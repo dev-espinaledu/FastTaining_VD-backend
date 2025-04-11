@@ -25,4 +25,11 @@ router.put(
     usuarioController.cambiarContrasena
 );
 
+// Ruta para crear admins 😼
+router.post(
+    "/usuarios/admin",
+    // authMiddleware,
+    usuarioController.crearAdmin
+);
+
 module.exports = router;
