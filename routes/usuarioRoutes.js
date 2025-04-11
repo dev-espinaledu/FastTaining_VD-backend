@@ -6,11 +6,11 @@ const { validateProfileData, validateImage } = require("../middlewares/validatio
 const upload = require("../middlewares/upload");
 
 // Obtener información del usuario actual
-router.get("/usuario", authMiddleware, usuarioController.obtenerUsuarioPorId);
+router.get('/usuario/actual', authMiddleware, usuarioController.obtenerUsuarioActual);
 
 // Actualizar información del usuario
 router.put(
-  "/usuario",
+  "/usuarios/:id",
   authMiddleware,
   upload.single("foto_perfil"),
   validateProfileData,
@@ -20,16 +20,15 @@ router.put(
 
 // Cambiar contraseña
 router.put(
-  "/usuario/password",
+  "/usuarios/:id/password",
   authMiddleware,
   usuarioController.cambiarContrasena
 );
 
-// Ruta para crear admins 😼
+// Ruta para crear admins
 router.post(
-    "/usuarios/admin",
-    // authMiddleware,
-    usuarioController.crearAdmin
+  "/usuarios/admin",
+  usuarioController.crearAdmin
 );
 
 module.exports = router;

@@ -1,51 +1,71 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config(); // Cargar variables de entorno
-const path = require('path');
+require("dotenv").config();
+const path = require("path");
 const cookieParser = require("cookie-parser");
-const jugadorRoutes = require("./routes/jugadorRoutes");
-const rol = require("./routes/rolRoutes");
-const entrenadorRoutes = require("./routes/entrenadorRoutes");
-const datosSesion = require("./routes/datosEntrenamientoRoutes");
-const entrenamientoRoutes = require("./routes/entrenamientoRoutes");
-const equipoRoutes = require("./routes/equipoRoutes");
-const authRoutes = require("./routes/authRoutes");
-const estadisticasRoutes = require("./routes/estadisticasRoutes");
-const usuarioRoutes = require("./routes/usuarioRoutes");
-const personaRoutes = require("./routes/personaRoutes");
+const fs = require("fs");
+
 const app = express();
 
-// Middleware para parsear JSON
-app.use(express.json());
-// cookie-parser
+// Crear directorio de uploads si no existe
+const uploadsDir = path.join(__dirname, "public/uploads/profiles");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Middlewares
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 
-// Servir archivos estáticos
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-
-// ✅ Configuración de CORS (solo una vez)
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000", // Permitir solo el frontend
-    methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
-    allowedHeaders: ["Content-Type", "Authorization", "Usuario-Rol"], // Cabeceras permitidas
-  }),
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Usuario-Rol"],
+    credentials: true,
+    exposedHeaders: ["Content-Disposition"],
+  })
 );
 
-// ✅ Definir prefijo para las rutas
-app.use("/api/auth", authRoutes);
-app.use("/api", jugadorRoutes);
-app.use("/api", rol);
-app.use("/api", entrenadorRoutes);
-app.use("/api", equipoRoutes);
-app.use("/api", entrenamientoRoutes);
-app.use("/api", datosSesion);
-app.use("/api", estadisticasRoutes);
-app.use("/api", usuarioRoutes);
-app.use("/api", personaRoutes);
+// Middleware para archivos estáticos
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "public/uploads"), {
+    setHeaders: (res) => {
+      res.set("Cache-Control", "public, max-age=86400"); // 1 día
+    },
+  })
+);
 
-// ✅ Iniciar servidor en el puerto correcto
+// Preflight para todas las rutas
+app.options("*", cors());
+
+// Rutas API
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api", require("./routes/jugadorRoutes"));
+app.use("/api", require("./routes/rolRoutes"));
+app.use("/api", require("./routes/entrenadorRoutes"));
+app.use("/api", require("./routes/equipoRoutes"));
+app.use("/api", require("./routes/entrenamientoRoutes"));
+app.use("/api", require("./routes/datosEntrenamientoRoutes"));
+app.use("/api", require("./routes/estadisticasRoutes"));
+app.use("/api", require("./routes/usuarioRoutes"));
+app.use("/api", require("./routes/personaRoutes"));
+
+// Error 404
+app.use((req, res, next) => {
+  res.status(404).json({ success: false, message: "Ruta no encontrada" });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Error interno:", err.stack);
+  res.status(500).json({ success: false, message: "Error interno del servidor" });
+});
+
+// Inicializar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT} ⚽️`);
+  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
 });

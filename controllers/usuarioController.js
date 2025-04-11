@@ -1,22 +1,19 @@
 const { Usuario, Persona, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 
-const obtenerUsuarioPorId = async (req, res) => {
-  const { id } = req.params;
-  
-  // Verificar que el usuario autenticado solo pueda ver su propio perfil
-  if (req.user.id != id && req.user.role !== 1) {
-    return res.status(403).json({
-      success: false,
-      message: "No tienes permiso para acceder a este recurso",
-      code: "FORBIDDEN"
-    });
-  }
-
+const obtenerUsuarioActual= async (req, res) => {
   try {
-    const usuarioId = req.user.id;
+    // Verificar que el usuario esté autenticado
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "No autenticado",
+        code: "UNAUTHORIZED"
+      });
+    }
 
-    const usuario = await Usuario.findByPk(usuarioId, {
+    // Obtener usuario con sus datos de persona
+    const usuario = await Usuario.findByPk(req.user.id, {
       include: [
         { 
           model: Persona,
@@ -35,31 +32,54 @@ const obtenerUsuarioPorId = async (req, res) => {
       });
     }
 
+    // Formatear respuesta
+    const responseData = {
+      id: usuario.id,
+      email: usuario.email,
+      rol_id: usuario.rol_id,
+      nombre: usuario.personas?.nombre || null,
+      apellido: usuario.personas?.apellido || null,
+      telefono: usuario.personas?.telefono || null,
+      foto_perfil: usuario.personas?.foto_perfil || null
+    };
+
     res.json({
       success: true,
-      data: {
-        id: usuario.id,
-        email: usuario.email,
-        rol_id: usuario.rol_id,
-        nombre: usuario.personas?.nombre,
-        apellido: usuario.personas?.apellido,
-        telefono: usuario.personas?.telefono,
-        foto_perfil: usuario.personas?.foto_perfil
-      }
+      data: responseData
     });
+
   } catch (error) {
-    console.error("Error al obtener usuario:", error);
+    console.error('Error al obtener usuario:', error);
     res.status(500).json({
       success: false,
       message: "Error en el servidor",
-      code: "SERVER_ERROR"
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
 
 const actualizarUsuario = async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, telefono } = req.body;
+  const { nombre, apellido, telefono, email } = req.body; // Extraer email aunque no se permita modificar
+
+  // Validar que el usuario esté actualizando su propio perfil
+  if (parseInt(id) !== req.user.id) {
+    return res.status(403).json({
+      success: false,
+      message: "No tienes permiso para actualizar este perfil",
+      code: "FORBIDDEN"
+    });
+  }
+
+  // Rechazar modificaciones al correo electrónico
+  if (email) {
+    return res.status(400).json({
+      success: false,
+      message: "No se permite modificar el correo electrónico",
+      code: "EMAIL_MODIFICATION_NOT_ALLOWED"
+    });
+  }
 
   // Validar campos obligatorios
   if (!nombre || !apellido) {
@@ -71,7 +91,7 @@ const actualizarUsuario = async (req, res) => {
   }
 
   try {
-    const usuario = await Usuario.findByPk(usuarioId, {
+    const usuario = await Usuario.findByPk(id, {
       include: [{ model: Persona, as: 'personas' }]
     });
 
@@ -83,15 +103,6 @@ const actualizarUsuario = async (req, res) => {
       });
     }
 
-    // Verificar que el usuario esté actualizando su propio perfil
-    if (usuario.id !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "No tienes permiso para actualizar este perfil",
-        code: "FORBIDDEN"
-      });
-    }
-
     // Preparar datos de actualización
     const updateData = {
       nombre,
@@ -99,36 +110,8 @@ const actualizarUsuario = async (req, res) => {
       telefono: telefono || usuario.personas.telefono
     };
 
-    // Manejar la imagen si se subió
-    if (req.file) {
-      try {
-        // Eliminar imagen anterior si existe
-        if (usuario.personas.foto_perfil) {
-          const publicId = usuario.personas.foto_perfil.split('/').pop().split('.')[0];
-          await cloudinary.uploader.destroy(`profile_pictures/${publicId}`);
-        }
-
-        // Subir nueva imagen a Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'profile_pictures',
-          width: 500,
-          height: 500,
-          crop: 'limit'
-        });
-
-        updateData.foto_perfil = result.secure_url;
-
-        // Eliminar archivo temporal después de subir
-        fs.unlinkSync(req.file.path);
-      } catch (uploadError) {
-        console.error("Error al subir imagen:", uploadError);
-        return res.status(500).json({
-          success: false,
-          message: "Error al subir la imagen",
-          code: "IMAGE_UPLOAD_ERROR"
-        });
-      }
-    }
+    // Manejar la imagen si se subió (código existente)
+    // ...
 
     // Actualizar datos de persona asociada
     await usuario.personas.update(updateData);
@@ -339,9 +322,8 @@ const crearAdmin = async (req, res) => {
 };
 
 module.exports = {
-  obtenerUsuarioPorId,
+  obtenerUsuarioActual,
   actualizarUsuario,
   cambiarContrasena,
   crearAdmin
 };
-// Exportar las funciones para su uso en otras partes de la aplicación

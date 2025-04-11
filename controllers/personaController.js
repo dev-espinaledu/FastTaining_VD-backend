@@ -1,6 +1,7 @@
 const { Persona } = require("../models");
 const { cloudinary } = require('../config/cloudinary');
 const fs = require('fs');
+const path = require('path');
 
 const obtenerPersonas = async (req, res) => {
   try {
@@ -85,38 +86,31 @@ const actualizarPersona = async (req, res) => {
       });
     }
 
-    // Validar campos obligatorios
-    if (!nombre || !apellido) {
-      return res.status(400).json({
-        success: false,
-        message: "Nombre y apellido son obligatorios",
-        code: "MISSING_REQUIRED_FIELDS"
-      });
-    }
-
     const updateData = { nombre, apellido, telefono };
 
     // Manejar la imagen si se subió
     if (req.file) {
       try {
         // Eliminar imagen anterior si existe
-        if (persona.foto_perfil) {
-          const publicId = persona.foto_perfil.split('/').pop().split('.')[0];
-          await cloudinary.uploader.destroy(`profile_pictures/${publicId}`);
+        if (persona.foto_perfil && persona.foto_perfil.startsWith('/uploads')) {
+          const oldImagePath = path.join(__dirname, '../../public', persona.foto_perfil);
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
         }
 
-        // Subir nueva imagen a Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'profile_pictures',
-          width: 500,
-          height: 500,
-          crop: 'limit'
-        });
+        // Guardar nueva imagen en el sistema de archivos
+        const uploadDir = path.join(__dirname, '../../public/uploads/profiles');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
 
-        updateData.foto_perfil = result.secure_url;
+        const fileName = `profile-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(req.file.originalname)}`;
+        const filePath = path.join(uploadDir, fileName);
 
-        // Eliminar archivo temporal después de subir
-        fs.unlinkSync(req.file.path);
+        await fs.promises.rename(req.file.path, filePath);
+
+        updateData.foto_perfil = `/uploads/profiles/${fileName}`;
       } catch (uploadError) {
         console.error("Error al subir imagen:", uploadError);
         return res.status(500).json({
