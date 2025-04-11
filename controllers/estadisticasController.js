@@ -116,6 +116,39 @@ const agregarDatosEstadisticasJugador = async (req, res) => {
   }
 };
 
+const agregarMasRegistrosEstadisticasJugador = async (req, res) => {
+  try {
+    const { jugador_id } = req.params;
+    const registros = req.body.registros; // Array de registros
+
+    if (!jugador_id) {
+      return res.status(400).json({ error: "Se requiere un jugador" });
+    }
+
+    // Validar que el cuerpo de la solicitud contenga un array de registros
+    if (!Array.isArray(registros)) {
+      return res.status(400).json({ error: "Se requiere un array de registros" });
+    }
+
+    // Insertar todos los registros en la base de datos
+    const nuevosRegistros = await Historial.bulkCreate(
+      registros.map((registro) => ({
+        ...registro,
+        jugador_id,
+        fecha_registro: registro.fecha_registro || new Date(),
+      }))
+    );
+
+    res.status(201).json({
+      mensaje: "Estadísticas generadas exitosamente",
+      data: nuevosRegistros,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al generar estadísticas" });
+  }
+}
+
 const estadisticasEjemplo = require("../data/estadisticasEjemplo");
 
 // Función para generar las fechas dinámicamente
@@ -184,4 +217,5 @@ module.exports = {
   agregarDatosEstadisticasJugador,
   generarFechas,
   obtenerEstadisticasEquipo,
+  agregarMasRegistrosEstadisticasJugador
 };

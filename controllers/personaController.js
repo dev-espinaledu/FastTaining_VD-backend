@@ -1,6 +1,7 @@
 const { Persona } = require("../models");
 const { cloudinary } = require('../config/cloudinary');
 const fs = require('fs');
+const path = require('path');
 
 const obtenerPersonas = async (req, res) => {
   try {
@@ -67,7 +68,7 @@ const actualizarPersona = async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido, telefono } = req.body;
 
-    // Validar que el usuario solo pueda actualizar su propio perfil
+    // Validar permisos
     if (req.user.id != id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -85,23 +86,14 @@ const actualizarPersona = async (req, res) => {
       });
     }
 
-    // Validar campos obligatorios
-    if (!nombre || !apellido) {
-      return res.status(400).json({
-        success: false,
-        message: "Nombre y apellido son obligatorios",
-        code: "MISSING_REQUIRED_FIELDS"
-      });
-    }
-
-    // Construir objeto de actualización
     const updateData = { nombre, apellido, telefono };
 
     // Manejar la imagen si se subió
     if (req.file) {
       try {
-        // Eliminar imagen anterior si existe
+        // Eliminar imagen anterior de Cloudinary si existe
         if (persona.foto_perfil) {
+          // Extraer el public_id de la URL de Cloudinary
           const publicId = persona.foto_perfil.split('/').pop().split('.')[0];
           await cloudinary.uploader.destroy(`profile_pictures/${publicId}`);
         }
@@ -114,12 +106,16 @@ const actualizarPersona = async (req, res) => {
           crop: 'limit'
         });
 
-        updateData.foto_perfil = result.secure_url;
-
-        // Eliminar archivo temporal después de subir
+        // Eliminar archivo temporal
         fs.unlinkSync(req.file.path);
+
+        updateData.foto_perfil = result.secure_url;
       } catch (uploadError) {
-        console.error("Error al subir imagen:", uploadError);
+        console.error("Error al subir imagen a Cloudinary:", uploadError);
+        // Eliminar archivo temporal si existe
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
         return res.status(500).json({
           success: false,
           message: "Error al subir la imagen",
@@ -143,6 +139,10 @@ const actualizarPersona = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al actualizar persona:", error);
+    // Eliminar archivo temporal si existe
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(500).json({
       success: false,
       message: "Error al actualizar el perfil",
