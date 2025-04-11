@@ -32,7 +32,7 @@ app.use(
 // Middleware para archivos estáticos
 app.use(
   "/uploads",
-  express.static(path.join(__dirname, "public/uploads"), {
+  express.static(path.join(__dirname, "uploads/profiles"), {
     setHeaders: (res) => {
       res.set("Cache-Control", "public, max-age=86400"); // 1 día
     },
