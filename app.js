@@ -11,6 +11,7 @@ const equipoRoutes = require("./routes/equipoRoutes");
 const authRoutes = require("./routes/authRoutes");
 const playerRoutes = require("./routes/playerRoutes");
 const estadisticasRoutes = require("./routes/estadisticasRoutes");
+const creacion_equipos = require("./routes/creacionDeequiposroutes")
 const app = express();
 
 // Middleware para parsear JSON
@@ -29,7 +30,7 @@ app.use(
 
 // ✅ Definir prefijo para las rutas
 app.use("/api/auth", authRoutes);
-app.use("/api", jugadores);
+app.use("/api/jugadores", jugadores);
 app.use("/api", rol);
 app.use("/api", entrenadorRoutes);
 app.use("/api", equipoRoutes);
@@ -37,6 +38,7 @@ app.use("/api", entrenamientoRoutes);
 app.use("/api", datosSesion);
 app.use("/api/estadisticas", playerRoutes);
 app.use("/api", estadisticasRoutes);
+app.use('/api/creacion', creacion_equipos);
 
 // ✅ Iniciar servidor en el puerto correcto
 const PORT = process.env.PORT || 5000;
