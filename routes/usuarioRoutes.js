@@ -6,7 +6,7 @@ const { validateProfileData, validateImage } = require("../middlewares/validatio
 const upload = require("../middlewares/upload");
 
 // Obtener información del usuario actual
-router.get("/usuario", authMiddleware, usuarioController.obtenerUsuarioActual);
+router.get("/usuario", authMiddleware, usuarioController.obtenerUsuarioId);
 
 // Actualizar información del usuario
 router.put(
