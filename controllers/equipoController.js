@@ -59,4 +59,26 @@ const getTeams = async (req, res) => {
   }
 };
 
-module.exports = { createTeam, getTeams };
+const obtenerEquipoPorId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const equipo = await Equipo.findByPk(id, {
+      include: [
+        { association: 'entrenadores' },
+        { association: 'jugadores' },
+      ],
+    });
+
+    if (!equipo) {
+      return res.status(404).json({ error: 'Equipo no encontrado' });
+    }
+
+    res.status(200).json(equipo);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener el equipo' });
+  }
+}
+
+module.exports = { createTeam, getTeams, obtenerEquipoPorId };
