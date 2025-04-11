@@ -286,7 +286,7 @@ const obtenerEntrenamientosPorJugador = async (req, res) => {
     });
 
     if (entrenamientos.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         mensaje: `No se encontraron entrenamientos para la posición ${jugador.posicion}`,
       });
     }

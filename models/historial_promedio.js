@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   Promedio.init({
     equipo_id: DataTypes.SMALLINT,
     fecha_registro: DataTypes.DATE,
+    posicion: DataTypes.STRING,
     grasa_corporal_prom:DataTypes.DOUBLE,
     masa_muscular_prom:DataTypes.DOUBLE,
     potencia_muscular_prom:DataTypes.DOUBLE,
@@ -22,7 +23,6 @@ module.exports = (sequelize, DataTypes) => {
     resistencia_aerobica_prom:DataTypes.DOUBLE,
     resistencia_anaerobica_prom:DataTypes.DOUBLE,
     flexibilidad_prom: DataTypes.DOUBLE,
-    posicion: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Promedio',

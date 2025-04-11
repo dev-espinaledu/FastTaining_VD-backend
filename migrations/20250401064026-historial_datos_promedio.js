@@ -19,11 +19,7 @@ module.exports = {
         allowNull:true,
         type: Sequelize.DATE
       },
-      altura_prom: {
-        type: Sequelize.DOUBLE,
-        allowNull:true
-      },
-      peso_prom: {
+      posicion: {
         type: Sequelize.STRING,
         allowNull:true
       },
