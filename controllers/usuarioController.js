@@ -1,5 +1,8 @@
 const { Usuario, Persona, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
+const { cloudinary } = require('../config/cloudinary');
+const fs = require('fs');
+const path = require('path');
 
 const obtenerUsuarioActual= async (req, res) => {
   try {
@@ -61,32 +64,14 @@ const obtenerUsuarioActual= async (req, res) => {
 
 const actualizarUsuario = async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, telefono, email } = req.body; // Extraer email aunque no se permita modificar
+  const { nombre, apellido, telefono } = req.body;
 
-  // Validar que el usuario esté actualizando su propio perfil
+  // Validar permisos
   if (parseInt(id) !== req.user.id) {
     return res.status(403).json({
       success: false,
       message: "No tienes permiso para actualizar este perfil",
       code: "FORBIDDEN"
-    });
-  }
-
-  // Rechazar modificaciones al correo electrónico
-  if (email) {
-    return res.status(400).json({
-      success: false,
-      message: "No se permite modificar el correo electrónico",
-      code: "EMAIL_MODIFICATION_NOT_ALLOWED"
-    });
-  }
-
-  // Validar campos obligatorios
-  if (!nombre || !apellido) {
-    return res.status(400).json({
-      success: false,
-      message: "Nombre y apellido son obligatorios",
-      code: "MISSING_REQUIRED_FIELDS"
     });
   }
 
@@ -103,15 +88,43 @@ const actualizarUsuario = async (req, res) => {
       });
     }
 
-    // Preparar datos de actualización
-    const updateData = {
-      nombre,
-      apellido,
-      telefono: telefono || usuario.personas.telefono
-    };
+    const updateData = { nombre, apellido, telefono };
 
-    // Manejar la imagen si se subió (código existente)
-    // ...
+    // Manejar la imagen si se subió
+    if (req.file) {
+      try {
+        // Eliminar imagen anterior de Cloudinary si existe
+        if (usuario.personas.foto_perfil && usuario.personas.foto_perfil.includes('res.cloudinary.com')) {
+          const publicId = usuario.personas.foto_perfil.split('/').slice(-2).join('/').split('.')[0];
+          await cloudinary.uploader.destroy(publicId);
+        }
+
+        // Subir nueva imagen a Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'profile_pictures',
+          width: 500,
+          height: 500,
+          crop: 'limit'
+        });
+
+        // Eliminar archivo temporal
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+
+        updateData.foto_perfil = result.secure_url;
+      } catch (uploadError) {
+        console.error("Error al subir imagen a Cloudinary:", uploadError);
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+        return res.status(500).json({
+          success: false,
+          message: "Error al subir la imagen",
+          code: "IMAGE_UPLOAD_ERROR"
+        });
+      }
+    }
 
     // Actualizar datos de persona asociada
     await usuario.personas.update(updateData);
@@ -122,12 +135,15 @@ const actualizarUsuario = async (req, res) => {
       data: {
         nombre,
         apellido,
-        telefono: updateData.telefono,
+        telefono,
         foto_perfil: updateData.foto_perfil || usuario.personas.foto_perfil
       }
     });
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(500).json({
       success: false,
       message: "Error en el servidor",
