@@ -57,7 +57,7 @@ exports.obtenerUsuarioPorId = async (req, res) => {
 
 exports.actualizarUsuario = async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, telefono/* , foto  */} = req.body;
+  const { nombre, apellido, telefono } = req.body;
 
   // Verificar que el usuario solo pueda modificar su propio perfil
   if (req.user.id != id) {
@@ -95,12 +95,19 @@ exports.actualizarUsuario = async (req, res) => {
       nombre,
       apellido,
       telefono,
-      /* foto */
+      // Solo actualizar foto si se subió una nueva
+      ...(req.file && { foto_perfil: req.file.path })
     });
 
     res.json({
       success: true,
-      message: "Información actualizada correctamente"
+      message: "Información actualizada correctamente",
+      data: {
+        nombre,
+        apellido,
+        telefono,
+        foto_perfil: req.file ? req.file.path : usuario.personas.foto_perfil
+      }
     });
   } catch (error) {
     console.error("Error al actualizar usuario:", error);

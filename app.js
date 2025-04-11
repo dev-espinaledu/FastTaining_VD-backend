@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config(); // Cargar variables de entorno
+const path = require('path');
 const cookieParser = require("cookie-parser");
 const jugadorRoutes = require("./routes/jugadorRoutes");
 const rol = require("./routes/rolRoutes");
@@ -18,6 +19,9 @@ const app = express();
 app.use(express.json());
 // cookie-parser
 app.use(cookieParser());
+
+// Servir archivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ✅ Configuración de CORS (solo una vez)
 app.use(
