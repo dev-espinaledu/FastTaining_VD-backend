@@ -52,6 +52,7 @@ app.use("/api", require("./routes/datosEntrenamientoRoutes"));
 app.use("/api", require("./routes/estadisticasRoutes"));
 app.use("/api", require("./routes/usuarioRoutes"));
 app.use("/api", require("./routes/personaRoutes"));
+app.use("/api", require("./routes/perfilRoutes"));
 
 // Error 404
 app.use((req, res, next) => {

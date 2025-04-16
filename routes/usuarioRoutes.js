@@ -3,18 +3,19 @@ const router = express.Router();
 const usuarioController = require("../controllers/usuarioController");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const { validateProfileData, validateImage } = require("../middlewares/validationMiddleware");
-const upload = require("../middlewares/upload");
+const { singleUpload, handleUploadErrors } = require("../middlewares/uploadMiddleware");
 
 // Obtener información del usuario actual
 router.get('/usuario/actual', authMiddleware, usuarioController.obtenerUsuarioActual);
 
 // Actualizar información del usuario
 router.put(
-  "/usuarios/:id",
+  "/usuario/perfil",
   authMiddleware,
-  upload.single("foto_perfil"),
+  singleUpload,
   validateProfileData,
   validateImage,
+  handleUploadErrors,
   usuarioController.actualizarUsuario
 );
 

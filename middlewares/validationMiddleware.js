@@ -1,26 +1,32 @@
 const validateProfileData = (req, res, next) => {
-    const { nombre, apellido, telefono } = req.body;
-    
-    // Validar campos obligatorios
-    if (!nombre || !apellido) {
-      return res.status(400).json({ 
-        success: false,
-        message: "Nombre y apellido son obligatorios",
-        code: "MISSING_REQUIRED_FIELDS"
-      });
-    }
+  let { nombre, apellido, telefono } = req.body;
   
-    // Validar teléfono si se proporciona
-    if (telefono && !/^[0-9]{10,15}$/.test(telefono)) {
-      return res.status(400).json({ 
-        success: false,
-        message: "Formato de teléfono inválido (10-15 dígitos)",
-        code: "INVALID_PHONE_FORMAT"
-      });
-    }
-  
-    next();
-  };
+  // Validar campos obligatorios
+  if (!nombre || !apellido) {
+    return res.status(400).json({ 
+      success: false,
+      message: "Nombre y apellido son obligatorios",
+      code: "MISSING_REQUIRED_FIELDS"
+    });
+  }
+
+  // Convertir teléfono a string si es número
+  if (telefono && typeof telefono !== 'string') {
+    telefono = String(telefono);
+    req.body.telefono = telefono; // Actualizar el request
+  }
+
+  // Validar teléfono si se proporciona
+  if (telefono && !/^\d{10}$/.test(telefono)) {
+    return res.status(400).json({ 
+      success: false,
+      message: "Formato de teléfono inválido (debe tener exactamente 10 dígitos)",
+      code: "INVALID_PHONE_FORMAT"
+    });
+  }
+
+  next();
+};
   
   const validateImage = (req, res, next) => {
     if (!req.file) return next();

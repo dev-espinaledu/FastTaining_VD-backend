@@ -1,5 +1,7 @@
 const { Persona, Usuario, Jugador, sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
+const { uploadToCloudinary } = require('../middlewares/uploadMiddleware');
+const { deleteImage } = require('../config/cloudinary');
 
 const verJugadores = async (req, res) => {
   try {
@@ -419,60 +421,6 @@ const obtenerJugadorConUsuario = async (usuarioId) => {
 const verPerfil = async (req, res) => {
   try {
     const usuarioId = req.user.id;
-    const jugador = await obtenerJugadorConUsuario(usuarioId);
-
-    if (!jugador) {
-      return res.status(404).json({
-        success: false,
-        message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: {
-        nombre: jugador.usuarios.personas.nombre,
-        apellido: jugador.usuarios.personas.apellido,
-        telefono: jugador.usuarios.personas.telefono,
-        fecha_nacimiento: jugador.fecha_nacimiento,
-      },
-    });
-  } catch (error) {
-    console.error("Error al obtener perfil:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error al obtener perfil",
-      code: "FETCH_PROFILE_ERROR",
-    });
-  }
-};
-
-const actualizarPerfil = async (req, res) => {
-  const t = await sequelize.transaction();
-  try {
-    const usuarioId = req.user.id;
-    const { nombre, apellido, telefono, fecha_nacimiento } = req.body;
-
-    // Validaciones básicas
-    if (!nombre || !apellido) {
-      await t.rollback();
-      return res.status(400).json({
-        success: false,
-        message: "Nombre y apellido son obligatorios",
-        code: "MISSING_REQUIRED_FIELDS",
-      });
-    }
-
-    if (telefono && !/^[0-9]{10,15}$/.test(telefono)) {
-      await t.rollback();
-      return res.status(400).json({
-        success: false,
-        message: "Formato de teléfono inválido",
-        code: "INVALID_PHONE_FORMAT",
-      });
-    }
-
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
       include: [
@@ -483,43 +431,37 @@ const actualizarPerfil = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-            },
-          ],
-        },
-      ],
-      transaction: t,
+              attributes: ["nombre", "apellido", "telefono", "foto_perfil"]
+            }
+          ]
+        }
+      ]
     });
 
-    if (!jugador || !jugador.usuarios || !jugador.usuarios.personas) {
-      await t.rollback();
+    if (!jugador) {
       return res.status(404).json({
         success: false,
         message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND",
+        code: "PROFILE_NOT_FOUND"
       });
     }
 
-    await jugador.usuarios.personas.update(
-      { nombre, apellido, telefono },
-      { transaction: t },
-    );
-
-    if (fecha_nacimiento) {
-      await jugador.update({ fecha_nacimiento }, { transaction: t });
-    }
-
-    await t.commit();
     res.json({
       success: true,
-      message: "Perfil actualizado correctamente",
+      data: {
+        nombre: jugador.usuarios.personas.nombre,
+        apellido: jugador.usuarios.personas.apellido,
+        telefono: jugador.usuarios.personas.telefono,
+        foto_perfil: jugador.usuarios.personas.foto_perfil,
+        fecha_nacimiento: jugador.fecha_nacimiento
+      }
     });
   } catch (error) {
-    await t.rollback();
-    console.error("Error al actualizar perfil:", error);
+    console.error("Error al obtener perfil:", error);
     res.status(500).json({
       success: false,
-      message: "Error al actualizar perfil",
-      code: "UPDATE_PROFILE_ERROR",
+      message: "Error al obtener perfil",
+      code: "FETCH_PROFILE_ERROR"
     });
   }
 };
@@ -604,7 +546,6 @@ module.exports = {
   actualizarCapacidadJugador,
   eliminarJugador,
   verPerfil,
-  actualizarPerfil,
   verificarPerfilCompleto,
   obtenerIdJugadorConUsuario,
 };

@@ -3,10 +3,12 @@ const router = express.Router();
 const estadisticasController = require("../controllers/estadisticasController");
 const sesionEntrenamientoController = require("../controllers/sesionEntrenamientoController");
 const jugadorController = require("../controllers/jugadorController");
+const { singleUpload, handleUploadErrors } = require('../middlewares/uploadMiddleware');
+
 const {
   authMiddleware,
   roleMiddleware,
-  verificarUsuarioOAdmin,
+  verificarUsuarioAutenticado,
 } = require("../middlewares/authMiddleware");
 const {
   validateProfileData,
@@ -29,14 +31,6 @@ router.get(
   authMiddleware,
   roleMiddleware("jugador"),
   jugadorController.verificarPerfilCompleto,
-);
-
-router.put(
-  "/jugador/perfil",
-  authMiddleware,
-  roleMiddleware("jugador"),
-  validateProfileData,
-  jugadorController.actualizarPerfil,
 );
 
 // Estadisticas del jugador y entrenamientos
@@ -77,7 +71,7 @@ router.get(
 router.put(
   "/jugador-info/:id", // Full update (admin or player owner)
   authMiddleware,
-  verificarUsuarioOAdmin,
+  verificarUsuarioAutenticado,
   jugadorController.actualizarJugador,
 );
 

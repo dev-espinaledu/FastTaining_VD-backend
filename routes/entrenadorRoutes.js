@@ -35,15 +35,6 @@ router.get(
   entrenadorController.obtenerEntrenadorPorUsuario
 );
 
-router.put(
-  "/entrenador/perfil",
-  authMiddleware,
-  verificarEntrenador,
-  validateProfileData,
-  validateImage,
-  entrenadorController.actualizarPerfil,
-);
-
 router.get("/entrenador/:id", entrenadorController.verEntrenador);
 
 router.post("/entrenador/crear", entrenadorController.crearEntrenador);

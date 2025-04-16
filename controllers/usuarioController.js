@@ -1,10 +1,10 @@
 const { Usuario, Persona, sequelize } = require("../models");
+const { cloudinary, deleteImage } = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../middlewares/uploadMiddleware');
 const bcrypt = require("bcryptjs");
-const { cloudinary } = require('../config/cloudinary');
-const fs = require('fs');
-const path = require('path');
+const streamifier = require('streamifier');
 
-const obtenerUsuarioActual= async (req, res) => {
+const obtenerUsuarioActual = async (req, res) => {
   try {
     // Verificar que el usuario esté autenticado
     if (!req.user || !req.user.id) {
@@ -76,11 +76,12 @@ const actualizarUsuario = async (req, res) => {
   }
 
   try {
+    // Buscar usuario con su persona asociada
     const usuario = await Usuario.findByPk(id, {
       include: [{ model: Persona, as: 'personas' }]
     });
 
-    if (!usuario) {
+    if (!usuario || !usuario.personas) {
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
@@ -93,61 +94,60 @@ const actualizarUsuario = async (req, res) => {
     // Manejar la imagen si se subió
     if (req.file) {
       try {
-        // Eliminar imagen anterior de Cloudinary si existe
-        if (usuario.personas.foto_perfil && usuario.personas.foto_perfil.includes('res.cloudinary.com')) {
-          const publicId = usuario.personas.foto_perfil.split('/').slice(-2).join('/').split('.')[0];
-          await cloudinary.uploader.destroy(publicId);
+        // Eliminar imagen anterior si existe
+        if (usuario.personas.foto_perfil) {
+          await deleteImage(usuario.personas.foto_perfil);
         }
 
         // Subir nueva imagen a Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
+        const result = await uploadToCloudinary(req.file.buffer, {
           folder: 'profile_pictures',
-          width: 500,
-          height: 500,
-          crop: 'limit'
+          public_id: `user_${id}_${Date.now()}`,
+          overwrite: false,
+          transformation: [
+            { width: 500, height: 500, crop: 'fill', gravity: 'face' },
+            { quality: 'auto', fetch_format: 'auto' }
+          ]
         });
-
-        // Eliminar archivo temporal
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
 
         updateData.foto_perfil = result.secure_url;
       } catch (uploadError) {
-        console.error("Error al subir imagen a Cloudinary:", uploadError);
-        if (req.file?.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
+        console.error("Error al subir imagen:", uploadError);
         return res.status(500).json({
           success: false,
-          message: "Error al subir la imagen",
-          code: "IMAGE_UPLOAD_ERROR"
+          message: "Error al procesar la imagen",
+          code: "IMAGE_UPLOAD_ERROR",
+          error: process.env.NODE_ENV === 'development' ? uploadError.message : undefined
         });
       }
     }
 
-    // Actualizar datos de persona asociada
+    // Actualizar datos de persona
     await usuario.personas.update(updateData);
+
+    // Obtener datos actualizados
+    const updatedPersona = await Persona.findByPk(usuario.personas.id);
 
     res.json({
       success: true,
-      message: "Información actualizada correctamente",
+      message: "Perfil actualizado correctamente",
       data: {
-        nombre,
-        apellido,
-        telefono,
+        id: usuario.id,
+        email: usuario.email,
+        nombre: updateData.nombre || usuario.personas.nombre,
+        apellido: updateData.apellido || usuario.personas.apellido,
+        telefono: updateData.telefono || usuario.personas.telefono,
         foto_perfil: updateData.foto_perfil || usuario.personas.foto_perfil
       }
     });
+
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     res.status(500).json({
       success: false,
-      message: "Error en el servidor",
-      code: "SERVER_ERROR"
+      message: "Error interno del servidor",
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

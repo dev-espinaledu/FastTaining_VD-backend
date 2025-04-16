@@ -1,19 +1,12 @@
-// routes/personaRoutes.js
 const express = require('express');
 const router = express.Router();
-const personaController = require('../controllers/personaController'); // Asegúrate que la ruta es correcta
-const upload = require('../middlewares/upload');
+const personaController = require('../controllers/personaController');
 const { authMiddleware } = require('../middlewares/authMiddleware');
+const { validateProfileData, validateImage } = require('../middlewares/validationMiddleware');
+const { singleUpload, handleUploadErrors } = require('../middlewares/uploadMiddleware');
 
-// Rutas
+// Rutas protegidas con autenticación y validaciones
 router.get('/', authMiddleware, personaController.obtenerPersonas);
 router.get('/:id', authMiddleware, personaController.obtenerPersonaPorId);
-// En tus rutas
-router.put(
-    '/:id',
-    authMiddleware,
-    upload.single('foto_perfil'), // Middleware de Multer
-    personaController.actualizarPersona
-    );
 
 module.exports = router;
