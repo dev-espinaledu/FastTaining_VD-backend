@@ -7,7 +7,7 @@ const verAdministradores = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "usuarios",
+          as: "usuarios", // Alias correcto según modelo
           attributes: ["email"],
           include: [
             {
@@ -261,7 +261,7 @@ const verPerfil = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "administradores", // Cambiado para coincidir con el modelo
+          as: "usuarios", // Cambiado a "usuarios" para coincidir con el modelo
           include: [
             {
               model: Persona,
@@ -285,10 +285,10 @@ const verPerfil = async (req, res) => {
       success: true,
       data: {
         id: administrador.id,
-        nombre: administrador.administradores.personas.nombre, // Acceso actualizado
-        apellido: administrador.administradores.personas.apellido,
-        telefono: administrador.administradores.personas.telefono,
-        foto_perfil: administrador.administradores.personas.foto_perfil,
+        nombre: administrador.usuarios.personas.nombre,
+        apellido: administrador.usuarios.personas.apellido,
+        telefono: administrador.usuarios.personas.telefono,
+        foto_perfil: administrador.usuarios.personas.foto_perfil,
         usuario_id: usuarioId
       }
     });
@@ -311,7 +311,7 @@ const verificarPerfilCompleto = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "administradores", // Cambiado para coincidir con el modelo
+          as: "usuarios", // Cambiado a "usuarios" para coincidir con el modelo
           include: [
             {
               model: Persona,
@@ -332,9 +332,9 @@ const verificarPerfilCompleto = async (req, res) => {
     }
 
     const camposRequeridos = {
-      nombre: administrador.administradores.personas.nombre, // Acceso actualizado
-      apellido: administrador.administradores.personas.apellido,
-      telefono: administrador.administradores.personas.telefono
+      nombre: administrador.usuarios.personas.nombre,
+      apellido: administrador.usuarios.personas.apellido,
+      telefono: administrador.usuarios.personas.telefono
     };
 
     const camposFaltantes = Object.entries(camposRequeridos)
