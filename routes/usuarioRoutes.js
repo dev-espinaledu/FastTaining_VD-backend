@@ -9,6 +9,9 @@ const { singleUpload, handleUploadErrors } = require("../middlewares/uploadMiddl
 router.get("/usuarios/:id", authMiddleware, usuarioController.obtenerUsuarioPorId);
 router.post("/usuarios/crear", usuarioController.CrearUsuario);
 
+// Obtener información del usuario actual
+router.get('/usuario/actual', authMiddleware, usuarioController.obtenerUsuarioActual);
+
 // Actualizar información del usuario
 router.put(
   "/usuario/perfil",

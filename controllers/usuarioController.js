@@ -106,6 +106,88 @@ const CrearUsuario = async (req,res)=>{
   }
 }
 
+const obtenerUsuarioActual = async (req, res) => {
+  try {
+    // Verificación de autenticación más robusta
+    if (!req.user?.id) {
+      return res.status(401).json({
+        success: false,
+        message: "No autenticado",
+        code: "UNAUTHORIZED",
+        details: "Token de usuario no encontrado"
+      });
+    }
+
+    // Obtener usuario con datos relacionados
+    const usuario = await Usuario.findByPk(req.user.id, {
+      attributes: ['id', 'email', 'rol_id', 'persona_id'],
+      include: [
+        { 
+          model: Persona,
+          as: 'personas', // Asegúrate que coincida con tu asociación
+          attributes: ['id', 'nombre', 'apellido', 'telefono', 'foto_perfil']
+        }
+      ],
+      rejectOnEmpty: true // Forzar error si no se encuentra
+    });
+
+    if (!usuario || !usuario.personas) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND",
+        details: "El ID del usuario no existe en la base de datos"
+      });
+    }
+
+    // Mapear nombres de roles
+    const roles = {
+      1: 'admin',
+      2: 'entrenador',
+      3: 'jugador'
+    };
+
+    // Formatear respuesta
+    const responseData = {
+      id: usuario.id,
+      email: usuario.email,
+      rol_id: usuario.rol_id,
+      rol_nombre: roles[usuario.rol_id] || 'desconocido',
+      nombre: usuario.personas.nombre,
+      apellido: usuario.personas.apellido,
+      telefono: usuario.personas.telefono,
+      foto_perfil: usuario.personas.foto_perfil 
+        ? `${usuario.personas.foto_perfil}?t=${Date.now()}` // Cache busting
+        : '/default-profile.png'
+    };
+
+    res.json({
+      success: true,
+      data: responseData
+    });
+
+  } catch (error) {
+    console.error('Error al obtener usuario:', {
+      error: error.message,
+      userId: req.user?.id,
+      timestamp: new Date().toISOString()
+    });
+
+    const statusCode = error.name === 'SequelizeEmptyResultError' ? 404 : 500;
+    
+    res.status(statusCode).json({
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' 
+        ? error.message 
+        : undefined,
+      details: process.env.NODE_ENV === 'development'
+        ? { stack: error.stack }
+        : undefined
+    });
+  }
+};
 
 const obtenerUsuarioPorId = async (req, res) => {
   const { id } = req.params;
@@ -342,6 +424,7 @@ const cambiarContrasena = async (req, res) => {
 
 module.exports = {
   CrearUsuario,
+  obtenerUsuarioActual,
   obtenerUsuarioPorId,
   actualizarUsuario,
   cambiarContrasena
