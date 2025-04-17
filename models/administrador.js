@@ -7,13 +7,15 @@ module.exports = (sequelize, DataTypes) => {
   static associate(models){
     Administrador.belongsTo(models.Usuario, {
       foreignKey: "usuario_id",
-      as: "administradores",
+      as: "usuarios",
+      onDelte: "CASCADE",
+      onUpdate: "CASCADE"
     });
   }
 
 }
   Administrador.init({
-    usuario_id: DataTypes.STRING
+    usuario_id: DataTypes.SMALLINT
   }, {
     sequelize,
     modelName: 'Administrador',

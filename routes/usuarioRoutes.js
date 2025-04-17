@@ -6,7 +6,9 @@ const { validateProfileData, validateImage } = require("../middlewares/validatio
 const upload = require("../middlewares/upload");
 
 // Obtener usuario por ID
+router.get('/usuarios/todos/ver', authMiddleware, usuarioController.obtenerUsers);
 router.get("/usuarios/:id", authMiddleware, usuarioController.obtenerUsuarioPorId);
+
 router.post("/usuarios/crear", usuarioController.CrearUsuario);
 
 // Actualizar información del usuario
