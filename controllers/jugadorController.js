@@ -420,7 +420,8 @@ const obtenerJugadorConUsuario = async (usuarioId) => {
 // Funciones específicas para el perfil
 const verPerfil = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
+    const usuarioId = req.user.id; // Siempre usar el ID del usuario autenticado
+    
     const jugador = await Jugador.findOne({
       where: { usuario_id: usuarioId },
       include: [
@@ -441,63 +442,85 @@ const verPerfil = async (req, res) => {
     if (!jugador) {
       return res.status(404).json({
         success: false,
-        message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND"
+        message: "Perfil de jugador no encontrado",
+        code: "PLAYER_PROFILE_NOT_FOUND"
       });
     }
 
     res.json({
       success: true,
       data: {
+        id: jugador.id,
         nombre: jugador.usuarios.personas.nombre,
         apellido: jugador.usuarios.personas.apellido,
         telefono: jugador.usuarios.personas.telefono,
         foto_perfil: jugador.usuarios.personas.foto_perfil,
-        fecha_nacimiento: jugador.fecha_nacimiento
+        fecha_nacimiento: jugador.fecha_nacimiento,
+        usuario_id: usuarioId // Para referencia
       }
     });
   } catch (error) {
-    console.error("Error al obtener perfil:", error);
+    console.error("Error al obtener perfil de jugador:", error);
     res.status(500).json({
       success: false,
-      message: "Error al obtener perfil",
-      code: "FETCH_PROFILE_ERROR"
+      message: "Error interno al obtener perfil de jugador",
+      code: "INTERNAL_SERVER_ERROR"
     });
   }
 };
 
+// Actualizar verificarPerfilCompleto
 const verificarPerfilCompleto = async (req, res) => {
   try {
-    const userId = req.params.userId
-    const jugador = await obtenerJugadorConUsuario(userId);
+    const usuarioId = req.user.id; // Usar siempre el ID del usuario autenticado
+    
+    const jugador = await Jugador.findOne({
+      where: { usuario_id: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          as: "usuarios",
+          include: [
+            {
+              model: Persona,
+              as: "personas",
+              attributes: ["nombre", "apellido", "telefono"]
+            }
+          ]
+        }
+      ]
+    });
 
     if (!jugador) {
       return res.json({
         success: true,
         profileComplete: false,
+        missingFields: ["all"] // Indica que falta todo el perfil
       });
     }
 
-    const { nombre, apellido, telefono } = jugador.usuarios.personas;
     const camposRequeridos = {
-      nombre,
-      apellido,
-      telefono,
-      fecha_nacimiento: jugador.fecha_nacimiento,
+      nombre: jugador.usuarios.personas.nombre,
+      apellido: jugador.usuarios.personas.apellido,
+      telefono: jugador.usuarios.personas.telefono,
+      fecha_nacimiento: jugador.fecha_nacimiento
     };
 
-    const perfilCompleto = Object.values(camposRequeridos).every((val) => val);
+    const camposFaltantes = Object.entries(camposRequeridos)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
 
     res.json({
       success: true,
-      profileComplete: perfilCompleto,
+      profileComplete: camposFaltantes.length === 0,
+      missingFields: camposFaltantes
     });
   } catch (error) {
-    console.error("Error verificando perfil:", error);
+    console.error("Error verificando perfil de jugador:", error);
     res.status(500).json({
       success: false,
-      message: "Error al verificar perfil",
-      code: "CHECK_PROFILE_ERROR",
+      message: "Error interno al verificar perfil",
+      code: "INTERNAL_SERVER_ERROR"
     });
   }
 };

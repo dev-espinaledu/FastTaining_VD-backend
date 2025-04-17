@@ -42,6 +42,7 @@ app.use(
 app.options("*", cors());
 
 // Rutas API
+app.use("/api", require("./routes/adminRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api", require("./routes/jugadorRoutes"));
 app.use("/api", require("./routes/rolRoutes"));

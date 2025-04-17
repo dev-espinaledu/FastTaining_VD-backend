@@ -148,6 +148,7 @@ const actualizarEntrenador = async (req, res) => {
 const verPerfil = async (req, res) => {
   try {
     const usuarioId = req.user.id;
+    
     const entrenador = await Entrenador.findOne({
       where: { usuario_id: usuarioId },
       include: [
@@ -168,72 +169,83 @@ const verPerfil = async (req, res) => {
     if (!entrenador) {
       return res.status(404).json({
         success: false,
-        message: "Perfil no encontrado",
-        code: "PROFILE_NOT_FOUND"
+        message: "Perfil de entrenador no encontrado",
+        code: "TRAINER_PROFILE_NOT_FOUND"
       });
     }
 
     res.json({
       success: true,
       data: {
+        id: entrenador.id,
         nombre: entrenador.usuarios.personas.nombre,
         apellido: entrenador.usuarios.personas.apellido,
         telefono: entrenador.usuarios.personas.telefono,
-        foto_perfil: entrenador.usuarios.personas.foto_perfil
+        foto_perfil: entrenador.usuarios.personas.foto_perfil,
+        usuario_id: usuarioId
       }
     });
   } catch (error) {
-    console.error("Error al obtener perfil:", error);
+    console.error("Error al obtener perfil de entrenador:", error);
     res.status(500).json({
       success: false,
-      message: "Error al obtener perfil",
-      code: "FETCH_PROFILE_ERROR"
+      message: "Error interno al obtener perfil",
+      code: "INTERNAL_SERVER_ERROR"
     });
   }
 };
 
+// Actualizar verificarPerfilCompleto
 const verificarPerfilCompleto = async (req, res) => {
   try {
-    const usuarioId = req.user.id; // Obtiene el ID del token
-
+    const usuarioId = req.user.id;
+    
     const entrenador = await Entrenador.findOne({
       where: { usuario_id: usuarioId },
       include: [
         {
           model: Usuario,
-          as: 'usuarios',
+          as: "usuarios",
           include: [
             {
               model: Persona,
-              as: 'personas',
-              attributes: ['nombre', 'apellido', 'telefono']
+              as: "personas",
+              attributes: ["nombre", "apellido", "telefono"]
             }
           ]
         }
       ]
     });
 
-    if (!entrenador || !entrenador.usuarios || !entrenador.usuarios.personas) {
-      return res.json({ 
+    if (!entrenador) {
+      return res.json({
         success: true,
-        profileComplete: false
+        profileComplete: false,
+        missingFields: ["all"]
       });
     }
 
-    const { nombre, apellido, telefono } = entrenador.usuarios.personas;
-    const camposRequeridos = { nombre, apellido, telefono };
-    const perfilCompleto = Object.values(camposRequeridos).every(val => val);
+    const camposRequeridos = {
+      nombre: entrenador.usuarios.personas.nombre,
+      apellido: entrenador.usuarios.personas.apellido,
+      telefono: entrenador.usuarios.personas.telefono
+    };
 
-    res.json({ 
+    const camposFaltantes = Object.entries(camposRequeridos)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+
+    res.json({
       success: true,
-      profileComplete: perfilCompleto
+      profileComplete: camposFaltantes.length === 0,
+      missingFields: camposFaltantes
     });
-
   } catch (error) {
-    console.error("Error verificando perfil:", error);
-    res.status(500).json({ 
+    console.error("Error verificando perfil de entrenador:", error);
+    res.status(500).json({
       success: false,
-      message: "Error al verificar perfil"
+      message: "Error interno al verificar perfil",
+      code: "INTERNAL_SERVER_ERROR"
     });
   }
 };
