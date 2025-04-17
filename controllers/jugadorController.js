@@ -3,6 +3,114 @@ const bcrypt = require("bcryptjs");
 const { uploadToCloudinary } = require('../middlewares/uploadMiddleware');
 const { deleteImage } = require('../config/cloudinary');
 
+
+// Función para agregar mas de un jugador
+const cargarJugadores = async (req, res) => {
+  try {
+    const jugadores = req.body.jugadores;
+
+    if (!jugadores || !Array.isArray(jugadores)) {
+      return res.status(400).json({
+        success: false,
+        message: "Formato de datos inválido",
+        code: "INVALID_DATA_FORMAT",
+      });
+    }
+    const jugadoresCreados = await Promise.all(
+      jugadores.map(async (jugador) => {
+        const {
+          nombre,
+          apellido,
+          telefono,
+          email,
+          pass,
+          equipo_id,
+          fecha_nacimiento,
+          altura,
+          peso,
+          posicion,
+          porcentaje_grasa_corporal,
+          porcentaje_masa_muscular,
+          tipo_cuerpo,
+          potencia_muscular_piernas,
+          velocidad_max,
+          resistencia_aerobica,
+          resistencia_anaerobica,
+          flexibilidad,
+        } = jugador;
+        if (!email || !pass) {
+          return {
+            success: false,
+            message: "Email y contraseña son obligatorios",
+            code: "MISSING_REQUIRED_FIELDS",
+          };
+        }
+        const emailExiste = await Usuario.findOne({ where: { email } });
+        if (emailExiste) {
+          return {
+            success: false,
+            message: "El correo ya está registrado",
+            code: "EMAIL_ALREADY_EXISTS",
+          };
+        }
+        const password = await bcrypt.hash(pass, 10);
+        const persona = await Persona.create({
+          nombre,
+          apellido,
+          telefono,
+        });
+        const usuario = await Usuario.create({
+          email,
+          password,
+          persona_id: persona.id,
+          rol_id: 3,
+        });
+        const jugadorCreado = await Jugador.create({
+          fecha_nacimiento,
+          altura,
+          peso,
+          posicion,
+          porcentaje_grasa_corporal,
+          porcentaje_masa_muscular,
+          tipo_cuerpo,
+          potencia_muscular_piernas,
+          velocidad_max,
+          resistencia_aerobica,
+          resistencia_anaerobica,
+          flexibilidad,
+          equipo_id,
+          usuario_id: usuario.id,
+        });
+        return {
+          success: true,
+          message: "Jugador creado exitosamente",
+          data: {
+            id: jugadorCreado.id,
+            nombre,
+            apellido,
+            email,
+            posicion,
+            altura,
+            peso,
+          },
+        };
+      }),
+    );
+    res.status(201).json({
+      success: true,
+      message: "Jugadores creados exitosamente",
+      data: jugadoresCreados,
+    });
+  } catch (error) {
+    console.error("Error al cargar jugadores:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al cargar jugadores",
+      code: "LOAD_PLAYERS_ERROR",
+    });
+  }
+};
+
 const verJugadores = async (req, res) => {
   try {
     const jugadores = await Jugador.findAll({
@@ -562,6 +670,7 @@ const obtenerIdJugadorConUsuario = async (req, res) => {
 };
 
 module.exports = {
+  cargarJugadores,
   verJugadores,
   verJugador,
   crearJugador,

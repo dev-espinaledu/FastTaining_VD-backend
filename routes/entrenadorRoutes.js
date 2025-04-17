@@ -31,7 +31,7 @@ router.get(
 // Obtener entrenador por ID de usuario
 router.get(
   "/entrenador/usuario/:id",
-  authMiddleware,
+  // authMiddleware,
   entrenadorController.obtenerEntrenadorPorUsuario
 );
 

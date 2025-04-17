@@ -15,13 +15,94 @@ const obtenerUsuarioActual = async (req, res) => {
       });
     }
 
-    // Obtener usuario con sus datos de persona
-    const usuario = await Usuario.findByPk(req.user.id, {
+    //Rol id
+    const roles = {
+      administrador: 1,
+      entrenador: 2,
+      jugador: 3,
+    };
+    
+    const rol_id = roles[rol.toLowerCase()];
+    if (!rol_id) {
+      return res.status(400).json({ error: "Rol inválido" });
+    }
+
+    //Crear la contraseña del usuario al azar
+    const passAleatorea = generarPasswordAzar(); // Contraseña aleatorea creada por la función anterior
+    const hashedPassword = await bcrypt.hash(passAleatorea, 10);
+
+    //Enviar correo
+
+    //Crear el id de persona
+    const persona = await Persona.create(
+      { nombre: null, apellido:null, telefono: null  },
+      { transaction: t }
+    );
+    //Crear el usuario 
+    const usuario = await Usuario.create(
+      {
+        email,
+        password:hashedPassword,
+        persona_id: persona.id,
+        rol_id, // Rol asignador
+      },
+      { transaction: t }
+    );
+
+    let data ={}
+    //Crear jugador o entrenador
+    if(rol_id ==2){
+      const entrenador = await Entrenador.create(
+        {usuario_id: usuario.id},
+        { transaction: t }
+      );
+      data ={entrenador};
+    }else if(rol_id ==3){
+      const jugador = await Jugador.create(
+        {usuario_id: usuario.id},
+        { transaction: t }
+      );
+      data ={jugador};
+    }
+
+    // Confirmar transacción
+    console.log("Usuario creado correctamente");
+
+    await correoContraseña(email, passAleatorea);
+
+    res.json({
+      success: true,
+      message: "Correo de recuperación enviado",
+    });
+    await t.commit();
+
+  }catch(e){
+    await t.rollback(); 
+    console.log("Error en CrearUsuario", e)
+    return res.status(500).json({mjs:`Error desde el método CrearUsuario ${e}`})
+  }
+}
+
+
+const obtenerUsuarioPorId = async (req, res) => {
+  const { id } = req.params;
+  
+  // Verificar que el usuario autenticado solo pueda ver su propio perfil
+  if (req.user.id != id && req.user.role !== 1) {
+    return res.status(403).json({
+      success: false,
+      message: "No tienes permiso para acceder a este recurso",
+      code: "FORBIDDEN"
+    });
+  }
+
+  try {
+    const usuario = await Usuario.findByPk(id, {
       include: [
         { 
           model: Persona,
           as: 'personas',
-          attributes: ['id', 'nombre', 'apellido', 'telefono', 'foto_perfil']
+          attributes: ['nombre', 'apellido', 'telefono'/* , 'foto' */]
         }
       ],
       attributes: ['id', 'email', 'rol_id']
@@ -35,29 +116,24 @@ const obtenerUsuarioActual = async (req, res) => {
       });
     }
 
-    // Formatear respuesta
-    const responseData = {
-      id: usuario.id,
-      email: usuario.email,
-      rol_id: usuario.rol_id,
-      nombre: usuario.personas?.nombre || null,
-      apellido: usuario.personas?.apellido || null,
-      telefono: usuario.personas?.telefono || null,
-      foto_perfil: usuario.personas?.foto_perfil || null
-    };
-
     res.json({
       success: true,
-      data: responseData
+      data: {
+        id: usuario.id,
+        email: usuario.email,
+        rol_id: usuario.rol_id,
+        nombre: usuario.personas?.nombre,
+        apellido: usuario.personas?.apellido,
+        telefono: usuario.personas?.telefono,
+        /* foto: usuario.personas?.foto */
+      }
     });
-
   } catch (error) {
-    console.error('Error al obtener usuario:', error);
+    console.error("Error al obtener usuario:", error);
     res.status(500).json({
       success: false,
       message: "Error en el servidor",
-      code: "SERVER_ERROR",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      code: "SERVER_ERROR"
     });
   }
 };
@@ -66,12 +142,21 @@ const actualizarUsuario = async (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, telefono } = req.body;
 
-  // Validar permisos
-  if (parseInt(id) !== req.user.id) {
+  // Verificar que el usuario solo pueda modificar su propio perfil
+  if (req.user.id != id) {
     return res.status(403).json({
       success: false,
-      message: "No tienes permiso para actualizar este perfil",
+      message: "Solo puedes modificar tu propio perfil",
       code: "FORBIDDEN"
+    });
+  }
+
+  // Validar campos obligatorios
+  if (!nombre || !apellido) {
+    return res.status(400).json({
+      success: false,
+      message: "Nombre y apellido son obligatorios",
+      code: "MISSING_REQUIRED_FIELDS"
     });
   }
 
@@ -157,10 +242,10 @@ const cambiarContrasena = async (req, res) => {
   const { contrasenaActual, nuevaContrasena, confirmacionContrasena } = req.body;
 
   // Verificar que el usuario solo pueda cambiar su propia contraseña
-  if (parseInt(id) !== req.user.id) {
+  if (req.user.id != id) {
     return res.status(403).json({
       success: false,
-      message: "No tienes permiso para cambiar esta contraseña",
+      message: "Solo puedes cambiar tu propia contraseña",
       code: "FORBIDDEN"
     });
   }
@@ -233,7 +318,8 @@ const cambiarContrasena = async (req, res) => {
 };
 
 module.exports = {
-  obtenerUsuarioActual,
+  CrearUsuario,
+  obtenerUsuarioPorId,
   actualizarUsuario,
   cambiarContrasena
 };

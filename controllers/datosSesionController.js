@@ -18,7 +18,7 @@ const TomarDatosEntrenamiento = async (req, res) => {
 
 const RegistrarDatosPosición = async (req, res) => {
   const {equipoId} = req.params;  
-  const { fecha, objetivo, posicion } = req.body;  
+  const { fecha, objetivo, posicion, nombre } = req.body;  
 
   try {
     console.log(equipoId)
@@ -48,6 +48,7 @@ const RegistrarDatosPosición = async (req, res) => {
 
     if (promedio) {
       const newData = await DatoSesion.create({
+        nombre_sesion:nombre,
         equipo_id: equipoId,
         fecha,
         objetivo,

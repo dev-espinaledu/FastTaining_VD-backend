@@ -19,7 +19,7 @@ module.exports = {
       },
       equipo_id: {
         type: Sequelize.SMALLINT,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "equipos",
           key: "id",

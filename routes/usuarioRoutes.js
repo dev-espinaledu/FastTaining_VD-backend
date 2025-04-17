@@ -5,8 +5,9 @@ const { authMiddleware } = require("../middlewares/authMiddleware");
 const { validateProfileData, validateImage } = require("../middlewares/validationMiddleware");
 const { singleUpload, handleUploadErrors } = require("../middlewares/uploadMiddleware");
 
-// Obtener información del usuario actual
-router.get('/usuario/actual', authMiddleware, usuarioController.obtenerUsuarioActual);
+// Obtener usuario por ID
+router.get("/usuarios/:id", authMiddleware, usuarioController.obtenerUsuarioPorId);
+router.post("/usuarios/crear", usuarioController.CrearUsuario);
 
 // Actualizar información del usuario
 router.put(
@@ -21,9 +22,9 @@ router.put(
 
 // Cambiar contraseña
 router.put(
-  "/usuarios/:id/password",
-  authMiddleware,
-  usuarioController.cambiarContrasena
+    "/usuarios/:id/password",
+    authMiddleware,
+    usuarioController.cambiarContrasena
 );
 
 module.exports = router;

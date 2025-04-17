@@ -4,6 +4,7 @@ require("dotenv").config();
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const fs = require("fs");
+const promedioRoutes = require("./routes/promedioRoutes");
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use("/api", require("./routes/estadisticasRoutes"));
 app.use("/api", require("./routes/usuarioRoutes"));
 app.use("/api", require("./routes/personaRoutes"));
 app.use("/api", require("./routes/perfilRoutes"));
+app.use("/api/promedios", promedioRoutes);
 
 // Error 404
 app.use((req, res, next) => {
