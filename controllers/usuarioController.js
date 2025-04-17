@@ -2,17 +2,40 @@ const { Usuario, Persona, sequelize } = require("../models");
 const { cloudinary, deleteImage } = require('../config/cloudinary');
 const { uploadToCloudinary } = require('../middlewares/uploadMiddleware');
 const bcrypt = require("bcryptjs");
-const streamifier = require('streamifier');
 
-const obtenerUsuarioActual = async (req, res) => {
-  try {
-    // Verificar que el usuario esté autenticado
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({
-        success: false,
-        message: "No autenticado",
-        code: "UNAUTHORIZED"
-      });
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+const {correoContraseña}=require('../utils/EmailPasword')
+
+dotenv.config();
+
+function generarPasswordAzar(){
+  //Lista de caracteres que van dentro de la contraseña
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_+';
+  
+  //Variable en la que se almacenará la contraseña
+  let password = '';
+  const longitud= 11;
+
+  for (let i = 0; i < longitud; i++) {
+    password += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return password;
+}
+
+const CrearUsuario = async (req,res)=>{
+  const {email, rol}= req.body;
+  const t = await sequelize.transaction(); 
+
+  try{
+
+    if (!email || !rol) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+    //Verifica que el usuario no existe 
+    const exist = await Usuario.findOne({where:{email}});
+    if (exist){
+      return res.status(400).json({ error: "El correo ya está registrado" })
     }
 
     //Rol id
