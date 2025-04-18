@@ -154,7 +154,7 @@ exports.restablecerContrasena = async (req, res) => {
     }
 
     // Calcular expiración
-    const fechaExpiracion = new Date(tokenRecord.createdAt.getTime() + 3600000); // 1 hora :p
+    const fechaExpiracion = new Date(tokenRecord.createdAt.getTime() + 10 * 60 * 1000); // 10 minutos jeje
     if (fechaExpiracion < new Date()) {
       return res.status(400).json({
         success: false,

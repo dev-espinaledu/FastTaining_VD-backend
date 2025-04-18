@@ -79,8 +79,8 @@ exports.actualizarPerfilUniversal = async (req, res) => {
         id: usuario.id,
         nombre,
         apellido,
-        telefono: telefono || usuario.personas.telefono, // Cambiado de persona a personas
-        foto_perfil: updateData.foto_perfil || usuario.personas.foto_perfil // Cambiado de persona a personas
+        telefono: telefono || usuario.personas.telefono,
+        foto_perfil: updateData.foto_perfil || usuario.personas.foto_perfil
       }
     });
 
