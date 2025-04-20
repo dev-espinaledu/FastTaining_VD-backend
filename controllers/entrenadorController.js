@@ -200,6 +200,7 @@ const verificarPerfilCompleto = async (req, res) => {
   try {
     const usuarioId = req.user.id;
     
+    // Buscar entrenador con usuario y persona relacionada
     const entrenador = await Entrenador.findOne({
       where: { usuario_id: usuarioId },
       include: [
@@ -218,34 +219,45 @@ const verificarPerfilCompleto = async (req, res) => {
     });
 
     if (!entrenador) {
-      return res.json({
-        success: true,
-        profileComplete: false,
-        missingFields: ["all"]
+      return res.status(404).json({
+        success: false,
+        message: "Entrenador no encontrado",
+        code: "TRAINER_NOT_FOUND"
       });
     }
 
+    // Campos requeridos para entrenador
     const camposRequeridos = {
       nombre: entrenador.usuarios.personas.nombre,
       apellido: entrenador.usuarios.personas.apellido,
       telefono: entrenador.usuarios.personas.telefono
     };
 
+    // Identificar campos faltantes
     const camposFaltantes = Object.entries(camposRequeridos)
       .filter(([_, value]) => !value)
       .map(([key]) => key);
 
+    // Datos existentes del perfil
+    const profileData = {
+      nombre: entrenador.usuarios.personas.nombre,
+      apellido: entrenador.usuarios.personas.apellido,
+      telefono: entrenador.usuarios.personas.telefono
+    };
+
     res.json({
       success: true,
       profileComplete: camposFaltantes.length === 0,
-      missingFields: camposFaltantes
+      missingFields: camposFaltantes,
+      profileData
     });
   } catch (error) {
     console.error("Error verificando perfil de entrenador:", error);
     res.status(500).json({
       success: false,
       message: "Error interno al verificar perfil",
-      code: "INTERNAL_SERVER_ERROR"
+      code: "INTERNAL_SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

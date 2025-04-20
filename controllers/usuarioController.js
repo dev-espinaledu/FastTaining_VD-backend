@@ -244,17 +244,8 @@ const obtenerUsuarioPorId = async (req, res) => {
 };
 
 const actualizarUsuario = async (req, res) => {
-  const { id } = req.params;
+  const usuarioId = req.user.id;
   const { nombre, apellido, telefono } = req.body;
-
-  // Verificar que el usuario solo pueda modificar su propio perfil
-  if (req.user.id != id) {
-    return res.status(403).json({
-      success: false,
-      message: "Solo puedes modificar tu propio perfil",
-      code: "FORBIDDEN"
-    });
-  }
 
   // Validar campos obligatorios
   if (!nombre || !apellido) {
@@ -265,13 +256,19 @@ const actualizarUsuario = async (req, res) => {
     });
   }
 
+  const t = await sequelize.transaction();
   try {
     // Buscar usuario con su persona asociada
-    const usuario = await Usuario.findByPk(id, {
-      include: [{ model: Persona, as: 'personas' }]
+    const usuario = await Usuario.findByPk(usuarioId, {
+      include: [{ 
+        model: Persona, 
+        as: 'personas' 
+      }],
+      transaction: t
     });
 
     if (!usuario || !usuario.personas) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
@@ -279,44 +276,14 @@ const actualizarUsuario = async (req, res) => {
       });
     }
 
-    const updateData = { nombre, apellido, telefono };
-
-    // Manejar la imagen si se subió
-    if (req.file) {
-      try {
-        // Eliminar imagen anterior si existe
-        if (usuario.personas.foto_perfil) {
-          await deleteImage(usuario.personas.foto_perfil);
-        }
-
-        // Subir nueva imagen a Cloudinary
-        const result = await uploadToCloudinary(req.file.buffer, {
-          folder: 'profile_pictures',
-          public_id: `user_${id}_${Date.now()}`,
-          overwrite: false,
-          transformation: [
-            { width: 500, height: 500, crop: 'fill', gravity: 'face' },
-            { quality: 'auto', fetch_format: 'auto' }
-          ]
-        });
-
-        updateData.foto_perfil = result.secure_url;
-      } catch (uploadError) {
-        console.error("Error al subir imagen:", uploadError);
-        return res.status(500).json({
-          success: false,
-          message: "Error al procesar la imagen",
-          code: "IMAGE_UPLOAD_ERROR",
-          error: process.env.NODE_ENV === 'development' ? uploadError.message : undefined
-        });
-      }
-    }
-
-    // Actualizar datos de persona
-    await usuario.personas.update(updateData);
-
-    // Obtener datos actualizados
-    const updatedPersona = await Persona.findByPk(usuario.personas.id);
+    // Actualizar solo datos personales
+    await usuario.personas.update({ 
+      nombre, 
+      apellido, 
+      telefono 
+    }, { transaction: t });
+    
+    await t.commit();
 
     res.json({
       success: true,
@@ -324,20 +291,180 @@ const actualizarUsuario = async (req, res) => {
       data: {
         id: usuario.id,
         email: usuario.email,
-        nombre: updateData.nombre || usuario.personas.nombre,
-        apellido: updateData.apellido || usuario.personas.apellido,
-        telefono: updateData.telefono || usuario.personas.telefono,
-        foto_perfil: updateData.foto_perfil || usuario.personas.foto_perfil
+        nombre,
+        apellido,
+        telefono
       }
     });
 
   } catch (error) {
+    await t.rollback();
     console.error("Error al actualizar usuario:", error);
     res.status(500).json({
       success: false,
       message: "Error interno del servidor",
-      code: "SERVER_ERROR",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      code: "SERVER_ERROR"
+    });
+  }
+};
+
+const actualizarImagenPerfil = async (req, res) => {
+  const usuarioId = req.user.id;
+  
+  console.log('Iniciando actualización de imagen para usuario:', usuarioId);
+  
+  // Validación de archivo recibido
+  if (!req.file) {
+    console.error('No se recibió archivo en la solicitud');
+    return res.status(400).json({
+      success: false,
+      message: "No se ha proporcionado ninguna imagen",
+      code: "NO_IMAGE_PROVIDED",
+      details: "El campo 'foto_perfil' está vacío o no se envió correctamente"
+    });
+  }
+
+  console.log('Archivo recibido:', {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    bufferLength: req.file.buffer?.length || 0
+  });
+
+  const t = await sequelize.transaction();
+  try {
+    // Buscar usuario con su persona asociada
+    const usuario = await Usuario.findByPk(usuarioId, {
+      include: [{ 
+        model: Persona, 
+        as: 'personas' 
+      }],
+      transaction: t
+    });
+
+    if (!usuario) {
+      await t.rollback();
+      console.error('Usuario no encontrado con ID:', usuarioId);
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND",
+        details: `No existe usuario con ID ${usuarioId}`
+      });
+    }
+
+    if (!usuario.personas) {
+      await t.rollback();
+      console.error('Registro de persona no encontrado para usuario:', usuarioId);
+      return res.status(404).json({
+        success: false,
+        message: "Datos de perfil no encontrados",
+        code: "PROFILE_NOT_FOUND",
+        details: "El usuario existe pero no tiene registro de persona asociado"
+      });
+    }
+
+    // Eliminar imagen anterior si existe
+    if (usuario.personas.foto_perfil) {
+      try {
+        console.log('Eliminando imagen anterior:', usuario.personas.foto_perfil);
+        await deleteImage(usuario.personas.foto_perfil);
+        console.log('Imagen anterior eliminada con éxito');
+      } catch (error) {
+        console.error("Error al eliminar imagen anterior:", error.message);
+        // Continuamos aunque falle la eliminación
+      }
+    }
+
+    // Configuración de transformación para Cloudinary
+    const uploadOptions = {
+      folder: 'user-profiles',
+      public_id: `user_${usuarioId}_${Date.now()}`,
+      overwrite: true,
+      transformation: [
+        { width: 500, height: 500, crop: 'fill', gravity: 'face' },
+        { quality: 'auto:best' },
+        { fetch_format: 'auto' }
+      ],
+      async: false // Procesamiento sincrónico
+    };
+
+    console.log('Subiendo imagen a Cloudinary con opciones:', uploadOptions);
+    
+    // Subir nueva imagen
+    const result = await uploadToCloudinary(req.file.buffer, uploadOptions);
+    
+    console.log('Respuesta de Cloudinary:', {
+      status: result.status,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      bytes: result.bytes,
+      format: result.format
+    });
+
+    if (!result.secure_url) {
+      throw new Error('Cloudinary no devolvió URL segura en la respuesta');
+    }
+
+    // Optimizar URL (forzar HTTPS y formato automático)
+    const optimizedUrl = result.secure_url
+      .replace('http://', 'https://')
+      .replace('/upload/', '/upload/q_auto,f_auto/');
+
+    // Actualizar en base de datos
+    await usuario.personas.update({ 
+      foto_perfil: optimizedUrl 
+    }, { transaction: t });
+    
+    await t.commit();
+    
+    console.log('Imagen actualizada correctamente en BD:', optimizedUrl);
+
+    return res.json({
+      success: true,
+      message: "Imagen de perfil actualizada correctamente",
+      data: {
+        foto_perfil: optimizedUrl,
+        public_id: result.public_id,
+        format: result.format,
+        size: result.bytes
+      }
+    });
+
+  } catch (error) {
+    await t.rollback();
+    
+    console.error("Error completo en actualizarImagenPerfil:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      originalError: error.original
+    });
+    
+    let errorMessage = "Error al actualizar la imagen de perfil";
+    let errorCode = "IMAGE_UPDATE_ERROR";
+    let details = null;
+
+    if (error.message.includes('File size too large')) {
+      errorMessage = "La imagen es demasiado grande (máximo 5MB)";
+      errorCode = "IMAGE_TOO_LARGE";
+    } else if (error.message.includes('Invalid image file')) {
+      errorMessage = "Formato de imagen no válido";
+      errorCode = "INVALID_IMAGE_FORMAT";
+    } else if (error.message.includes('Cloudinary')) {
+      errorMessage = "Error en el servicio de almacenamiento de imágenes";
+      errorCode = "CLOUDINARY_ERROR";
+      details = process.env.NODE_ENV === 'development' ? error.message : null;
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: errorMessage,
+      code: errorCode,
+      details: process.env.NODE_ENV === 'development' ? {
+        error: error.message,
+        stack: error.stack
+      } : null
     });
   }
 };
@@ -427,5 +554,6 @@ module.exports = {
   obtenerUsuarioActual,
   obtenerUsuarioPorId,
   actualizarUsuario,
+  actualizarImagenPerfil,
   cambiarContrasena
 };

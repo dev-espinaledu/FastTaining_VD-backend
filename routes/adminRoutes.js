@@ -5,14 +5,14 @@ const { authMiddleware, roleMiddleware } = require("../middlewares/authMiddlewar
 
 // Perfil del administrador
 router.get(
-  "/admin/perfil",
+  "/admin/perfil/:id",
   authMiddleware,
   roleMiddleware("admin"),
   adminController.verPerfil
 );
 
 router.get(
-  "/admin/verificar-perfil",
+  "/admin/verificar-perfil/:userId",
   authMiddleware,
   roleMiddleware("admin"),
   adminController.verificarPerfilCompleto

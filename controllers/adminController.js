@@ -160,10 +160,12 @@ const crearAdministrador = async (req, res) => {
 const actualizarAdministrador = async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const { id } = req.params;
     const { nombre, apellido, telefono, email, pass } = req.body;
+    const usuarioId = req.user.id; // Obtener ID del usuario autenticado
 
-    const administrador = await Administrador.findByPk(id, {
+    // Buscar administrador por usuario_id en lugar de id
+    const administrador = await Administrador.findOne({
+      where: { usuario_id: usuarioId },
       include: [
         {
           model: Usuario,
@@ -188,6 +190,7 @@ const actualizarAdministrador = async (req, res) => {
       });
     }
 
+    // Actualizar datos de persona
     await administrador.usuarios.personas.update(
       { nombre, apellido, telefono },
       { transaction: t }
@@ -261,7 +264,7 @@ const verPerfil = async (req, res) => {
       include: [
         {
           model: Usuario,
-          as: "usuarios", // Cambiado a "usuarios" para coincidir con el modelo
+          as: "usuarios",
           include: [
             {
               model: Persona,
@@ -306,12 +309,13 @@ const verificarPerfilCompleto = async (req, res) => {
   try {
     const usuarioId = req.user.id;
     
+    // Buscar admin con usuario y persona relacionada
     const administrador = await Administrador.findOne({
       where: { usuario_id: usuarioId },
       include: [
         {
           model: Usuario,
-          as: "usuarios", // Cambiado a "usuarios" para coincidir con el modelo
+          as: "usuarios",
           include: [
             {
               model: Persona,
@@ -324,34 +328,45 @@ const verificarPerfilCompleto = async (req, res) => {
     });
 
     if (!administrador) {
-      return res.json({
-        success: true,
-        profileComplete: false,
-        missingFields: ["all"]
+      return res.status(404).json({
+        success: false,
+        message: "Administrador no encontrado",
+        code: "ADMIN_NOT_FOUND"
       });
     }
 
+    // Campos requeridos para admin
     const camposRequeridos = {
       nombre: administrador.usuarios.personas.nombre,
       apellido: administrador.usuarios.personas.apellido,
       telefono: administrador.usuarios.personas.telefono
     };
 
+    // Identificar campos faltantes
     const camposFaltantes = Object.entries(camposRequeridos)
       .filter(([_, value]) => !value)
       .map(([key]) => key);
 
+    // Datos existentes del perfil
+    const profileData = {
+      nombre: administrador.usuarios.personas.nombre,
+      apellido: administrador.usuarios.personas.apellido,
+      telefono: administrador.usuarios.personas.telefono
+    };
+
     res.json({
       success: true,
       profileComplete: camposFaltantes.length === 0,
-      missingFields: camposFaltantes
+      missingFields: camposFaltantes,
+      profileData
     });
   } catch (error) {
     console.error("Error verificando perfil de administrador:", error);
     res.status(500).json({
       success: false,
       message: "Error interno al verificar perfil",
-      code: "INTERNAL_SERVER_ERROR"
+      code: "INTERNAL_SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

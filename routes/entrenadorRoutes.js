@@ -22,7 +22,7 @@ router.get(
 
 // Agrega esta nueva ruta
 router.get(
-  '/entrenador/verificar-perfil',
+  '/entrenador/verificar-perfil/:userId',
   authMiddleware,
   verificarEntrenador,
   entrenadorController.verificarPerfilCompleto

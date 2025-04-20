@@ -54,7 +54,6 @@ app.use("/api", require("./routes/datosEntrenamientoRoutes"));
 app.use("/api", require("./routes/estadisticasRoutes"));
 app.use("/api", require("./routes/usuarioRoutes"));
 app.use("/api", require("./routes/personaRoutes"));
-app.use("/api", require("./routes/perfilRoutes"));
 app.use("/api/promedios", promedioRoutes);
 
 // Error 404

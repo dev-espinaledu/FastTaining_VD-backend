@@ -528,10 +528,10 @@ const obtenerJugadorConUsuario = async (usuarioId) => {
 // Funciones específicas para el perfil
 const verPerfil = async (req, res) => {
   try {
-    const usuarioId = req.user.id; // Siempre usar el ID del usuario autenticado
+    const { id } = req.params;
     
     const jugador = await Jugador.findOne({
-      where: { usuario_id: usuarioId },
+      where: { id },
       include: [
         {
           model: Usuario,
@@ -564,26 +564,26 @@ const verPerfil = async (req, res) => {
         telefono: jugador.usuarios.personas.telefono,
         foto_perfil: jugador.usuarios.personas.foto_perfil,
         fecha_nacimiento: jugador.fecha_nacimiento,
-        usuario_id: usuarioId // Para referencia
+        usuario_id: jugador.usuario_id
       }
     });
   } catch (error) {
     console.error("Error al obtener perfil de jugador:", error);
     res.status(500).json({
       success: false,
-      message: "Error interno al obtener perfil de jugador",
+      message: "Error interno al obtener perfil",
       code: "INTERNAL_SERVER_ERROR"
     });
   }
 };
 
-// Actualizar verificarPerfilCompleto
 const verificarPerfilCompleto = async (req, res) => {
   try {
-    const usuarioId = req.user.id; // Usar siempre el ID del usuario autenticado
+    const { userId } = req.params;
     
+    // Buscar jugador por usuario_id
     const jugador = await Jugador.findOne({
-      where: { usuario_id: usuarioId },
+      where: { usuario_id: userId },
       include: [
         {
           model: Usuario,
@@ -600,13 +600,14 @@ const verificarPerfilCompleto = async (req, res) => {
     });
 
     if (!jugador) {
-      return res.json({
-        success: true,
-        profileComplete: false,
-        missingFields: ["all"] // Indica que falta todo el perfil
+      return res.status(404).json({
+        success: false,
+        message: "Jugador no encontrado",
+        code: "PLAYER_NOT_FOUND"
       });
     }
 
+    // Campos requeridos para jugador
     const camposRequeridos = {
       nombre: jugador.usuarios.personas.nombre,
       apellido: jugador.usuarios.personas.apellido,
@@ -614,6 +615,7 @@ const verificarPerfilCompleto = async (req, res) => {
       fecha_nacimiento: jugador.fecha_nacimiento
     };
 
+    // Identificar campos faltantes
     const camposFaltantes = Object.entries(camposRequeridos)
       .filter(([_, value]) => !value)
       .map(([key]) => key);
@@ -621,7 +623,8 @@ const verificarPerfilCompleto = async (req, res) => {
     res.json({
       success: true,
       profileComplete: camposFaltantes.length === 0,
-      missingFields: camposFaltantes
+      missingFields: camposFaltantes,
+      profileData: camposRequeridos
     });
   } catch (error) {
     console.error("Error verificando perfil de jugador:", error);
