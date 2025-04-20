@@ -1,27 +1,213 @@
 const { Usuario, Persona, sequelize } = require("../models");
+const { cloudinary, deleteImage } = require('../config/cloudinary');
+const { uploadToCloudinary } = require('../middlewares/uploadMiddleware');
 const bcrypt = require("bcryptjs");
-const { cloudinary } = require('../config/cloudinary');
-const fs = require('fs');
-const path = require('path');
 
-const obtenerUsuarioActual= async (req, res) => {
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+const {correoContraseña}=require('../utils/EmailPasword')
+
+dotenv.config();
+
+function generarPasswordAzar(){
+  //Lista de caracteres que van dentro de la contraseña
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_+';
+  
+  //Variable en la que se almacenará la contraseña
+  let password = '';
+  const longitud= 11;
+
+  for (let i = 0; i < longitud; i++) {
+    password += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return password;
+}
+
+const CrearUsuario = async (req,res)=>{
+  const {email, rol}= req.body;
+  const t = await sequelize.transaction(); 
+
+  try{
+
+    if (!email || !rol) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+    //Verifica que el usuario no existe 
+    const exist = await Usuario.findOne({where:{email}});
+    if (exist){
+      return res.status(400).json({ error: "El correo ya está registrado" })
+    }
+
+    //Rol id
+    const roles = {
+      administrador: 1,
+      entrenador: 2,
+      jugador: 3,
+    };
+    
+    const rol_id = roles[rol.toLowerCase()];
+    if (!rol_id) {
+      return res.status(400).json({ error: "Rol inválido" });
+    }
+
+    //Crear la contraseña del usuario al azar
+    const passAleatorea = generarPasswordAzar(); // Contraseña aleatorea creada por la función anterior
+    const hashedPassword = await bcrypt.hash(passAleatorea, 10);
+
+    //Enviar correo
+
+    //Crear el id de persona
+    const persona = await Persona.create(
+      { nombre: null, apellido:null, telefono: null  },
+      { transaction: t }
+    );
+    //Crear el usuario 
+    const usuario = await Usuario.create(
+      {
+        email,
+        password:hashedPassword,
+        persona_id: persona.id,
+        rol_id, // Rol asignador
+      },
+      { transaction: t }
+    );
+
+    let data ={}
+    //Crear jugador o entrenador
+    if(rol_id ==2){
+      const entrenador = await Entrenador.create(
+        {usuario_id: usuario.id},
+        { transaction: t }
+      );
+      data ={entrenador};
+    }else if(rol_id ==3){
+      const jugador = await Jugador.create(
+        {usuario_id: usuario.id},
+        { transaction: t }
+      );
+      data ={jugador};
+    }
+
+    // Confirmar transacción
+    console.log("Usuario creado correctamente");
+
+    await correoContraseña(email, passAleatorea);
+
+    res.json({
+      success: true,
+      message: "Correo de recuperación enviado",
+    });
+    await t.commit();
+
+  }catch(e){
+    await t.rollback(); 
+    console.log("Error en CrearUsuario", e)
+    return res.status(500).json({mjs:`Error desde el método CrearUsuario ${e}`})
+  }
+}
+
+const obtenerUsuarioActual = async (req, res) => {
   try {
-    // Verificar que el usuario esté autenticado
-    if (!req.user || !req.user.id) {
+    // Verificación de autenticación más robusta
+    if (!req.user?.id) {
       return res.status(401).json({
         success: false,
         message: "No autenticado",
-        code: "UNAUTHORIZED"
+        code: "UNAUTHORIZED",
+        details: "Token de usuario no encontrado"
       });
     }
 
-    // Obtener usuario con sus datos de persona
+    // Obtener usuario con datos relacionados
     const usuario = await Usuario.findByPk(req.user.id, {
+      attributes: ['id', 'email', 'rol_id', 'persona_id'],
+      include: [
+        { 
+          model: Persona,
+          as: 'personas', // Asegúrate que coincida con tu asociación
+          attributes: ['id', 'nombre', 'apellido', 'telefono', 'foto_perfil']
+        }
+      ],
+      rejectOnEmpty: true // Forzar error si no se encuentra
+    });
+
+    if (!usuario || !usuario.personas) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND",
+        details: "El ID del usuario no existe en la base de datos"
+      });
+    }
+
+    // Mapear nombres de roles
+    const roles = {
+      1: 'admin',
+      2: 'entrenador',
+      3: 'jugador'
+    };
+
+    // Formatear respuesta
+    const responseData = {
+      id: usuario.id,
+      email: usuario.email,
+      rol_id: usuario.rol_id,
+      rol_nombre: roles[usuario.rol_id] || 'desconocido',
+      nombre: usuario.personas.nombre,
+      apellido: usuario.personas.apellido,
+      telefono: usuario.personas.telefono,
+      foto_perfil: usuario.personas.foto_perfil 
+        ? `${usuario.personas.foto_perfil}?t=${Date.now()}` // Cache busting
+        : '/default-profile.png'
+    };
+
+    res.json({
+      success: true,
+      data: responseData
+    });
+
+  } catch (error) {
+    console.error('Error al obtener usuario:', {
+      error: error.message,
+      userId: req.user?.id,
+      timestamp: new Date().toISOString()
+    });
+
+    const statusCode = error.name === 'SequelizeEmptyResultError' ? 404 : 500;
+    
+    res.status(statusCode).json({
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' 
+        ? error.message 
+        : undefined,
+      details: process.env.NODE_ENV === 'development'
+        ? { stack: error.stack }
+        : undefined
+    });
+  }
+};
+
+const obtenerUsuarioPorId = async (req, res) => {
+  const { id } = req.params;
+  
+  // Verificar que el usuario autenticado solo pueda ver su propio perfil
+  if (req.user.id != id && req.user.role !== 1) {
+    return res.status(403).json({
+      success: false,
+      message: "No tienes permiso para acceder a este recurso",
+      code: "FORBIDDEN"
+    });
+  }
+
+  try {
+    const usuario = await Usuario.findByPk(id, {
       include: [
         { 
           model: Persona,
           as: 'personas',
-          attributes: ['id', 'nombre', 'apellido', 'telefono', 'foto_perfil']
+          attributes: ['nombre', 'apellido', 'telefono'/* , 'foto' */]
         }
       ],
       attributes: ['id', 'email', 'rol_id']
@@ -35,29 +221,24 @@ const obtenerUsuarioActual= async (req, res) => {
       });
     }
 
-    // Formatear respuesta
-    const responseData = {
-      id: usuario.id,
-      email: usuario.email,
-      rol_id: usuario.rol_id,
-      nombre: usuario.personas?.nombre || null,
-      apellido: usuario.personas?.apellido || null,
-      telefono: usuario.personas?.telefono || null,
-      foto_perfil: usuario.personas?.foto_perfil || null
-    };
-
     res.json({
       success: true,
-      data: responseData
+      data: {
+        id: usuario.id,
+        email: usuario.email,
+        rol_id: usuario.rol_id,
+        nombre: usuario.personas?.nombre,
+        apellido: usuario.personas?.apellido,
+        telefono: usuario.personas?.telefono,
+        /* foto: usuario.personas?.foto */
+      }
     });
-
   } catch (error) {
-    console.error('Error al obtener usuario:', error);
+    console.error("Error al obtener usuario:", error);
     res.status(500).json({
       success: false,
       message: "Error en el servidor",
-      code: "SERVER_ERROR",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      code: "SERVER_ERROR"
     });
   }
 };
@@ -66,21 +247,31 @@ const actualizarUsuario = async (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, telefono } = req.body;
 
-  // Validar permisos
-  if (parseInt(id) !== req.user.id) {
+  // Verificar que el usuario solo pueda modificar su propio perfil
+  if (req.user.id != id) {
     return res.status(403).json({
       success: false,
-      message: "No tienes permiso para actualizar este perfil",
+      message: "Solo puedes modificar tu propio perfil",
       code: "FORBIDDEN"
     });
   }
 
+  // Validar campos obligatorios
+  if (!nombre || !apellido) {
+    return res.status(400).json({
+      success: false,
+      message: "Nombre y apellido son obligatorios",
+      code: "MISSING_REQUIRED_FIELDS"
+    });
+  }
+
   try {
+    // Buscar usuario con su persona asociada
     const usuario = await Usuario.findByPk(id, {
       include: [{ model: Persona, as: 'personas' }]
     });
 
-    if (!usuario) {
+    if (!usuario || !usuario.personas) {
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
@@ -93,61 +284,60 @@ const actualizarUsuario = async (req, res) => {
     // Manejar la imagen si se subió
     if (req.file) {
       try {
-        // Eliminar imagen anterior de Cloudinary si existe
-        if (usuario.personas.foto_perfil && usuario.personas.foto_perfil.includes('res.cloudinary.com')) {
-          const publicId = usuario.personas.foto_perfil.split('/').slice(-2).join('/').split('.')[0];
-          await cloudinary.uploader.destroy(publicId);
+        // Eliminar imagen anterior si existe
+        if (usuario.personas.foto_perfil) {
+          await deleteImage(usuario.personas.foto_perfil);
         }
 
         // Subir nueva imagen a Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
+        const result = await uploadToCloudinary(req.file.buffer, {
           folder: 'profile_pictures',
-          width: 500,
-          height: 500,
-          crop: 'limit'
+          public_id: `user_${id}_${Date.now()}`,
+          overwrite: false,
+          transformation: [
+            { width: 500, height: 500, crop: 'fill', gravity: 'face' },
+            { quality: 'auto', fetch_format: 'auto' }
+          ]
         });
-
-        // Eliminar archivo temporal
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
 
         updateData.foto_perfil = result.secure_url;
       } catch (uploadError) {
-        console.error("Error al subir imagen a Cloudinary:", uploadError);
-        if (req.file?.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
+        console.error("Error al subir imagen:", uploadError);
         return res.status(500).json({
           success: false,
-          message: "Error al subir la imagen",
-          code: "IMAGE_UPLOAD_ERROR"
+          message: "Error al procesar la imagen",
+          code: "IMAGE_UPLOAD_ERROR",
+          error: process.env.NODE_ENV === 'development' ? uploadError.message : undefined
         });
       }
     }
 
-    // Actualizar datos de persona asociada
+    // Actualizar datos de persona
     await usuario.personas.update(updateData);
+
+    // Obtener datos actualizados
+    const updatedPersona = await Persona.findByPk(usuario.personas.id);
 
     res.json({
       success: true,
-      message: "Información actualizada correctamente",
+      message: "Perfil actualizado correctamente",
       data: {
-        nombre,
-        apellido,
-        telefono,
+        id: usuario.id,
+        email: usuario.email,
+        nombre: updateData.nombre || usuario.personas.nombre,
+        apellido: updateData.apellido || usuario.personas.apellido,
+        telefono: updateData.telefono || usuario.personas.telefono,
         foto_perfil: updateData.foto_perfil || usuario.personas.foto_perfil
       }
     });
+
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     res.status(500).json({
       success: false,
-      message: "Error en el servidor",
-      code: "SERVER_ERROR"
+      message: "Error interno del servidor",
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -157,10 +347,10 @@ const cambiarContrasena = async (req, res) => {
   const { contrasenaActual, nuevaContrasena, confirmacionContrasena } = req.body;
 
   // Verificar que el usuario solo pueda cambiar su propia contraseña
-  if (parseInt(id) !== req.user.id) {
+  if (req.user.id != id) {
     return res.status(403).json({
       success: false,
-      message: "No tienes permiso para cambiar esta contraseña",
+      message: "Solo puedes cambiar tu propia contraseña",
       code: "FORBIDDEN"
     });
   }
@@ -232,114 +422,10 @@ const cambiarContrasena = async (req, res) => {
   }
 };
 
-const crearAdmin = async (req, res) => {
-  const { email, password, nombre, apellido, telefono } = req.body;
-
-  // Validar campos obligatorios
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Email y contraseña son obligatorios",
-      code: "MISSING_REQUIRED_FIELDS",
-    });
-  }
-
-  // Validar formato de email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({
-      success: false,
-      message: "Formato de email inválido",
-      code: "INVALID_EMAIL_FORMAT",
-    });
-  }
-
-  // Validar criterios de contraseña
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!passwordRegex.test(password)) {
-    return res.status(400).json({
-      success: false,
-      message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial",
-      code: "INVALID_PASSWORD_FORMAT",
-    });
-  }
-
-  // Validar que el email no esté ya registrado
-  const usuarioExistente = await Usuario.findOne({ where: { email } });
-  if (usuarioExistente) {
-    return res.status(400).json({
-      success: false,
-      message: "El email ya está registrado",
-      code: "EMAIL_ALREADY_REGISTERED",
-    });
-  }
-
-  const t = await sequelize.transaction(); // Iniciar transacción
-  try {
-    // Crear nuevo usuario administrador
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Crear la entidad Persona
-    const persona = await Persona.create(
-      { nombre, apellido, telefono },
-      { transaction: t }
-    );
-
-    // Validar que la creación de Persona fue exitosa
-    if (!persona) {
-      await t.rollback();
-      return res.status(500).json({
-        success: false,
-        message: "Error al crear persona",
-        code: "PERSON_CREATION_ERROR",
-      });
-    }
-
-    // Crear la entidad Usuario
-    const nuevoUsuario = await Usuario.create(
-      {
-        email,
-        password: hashedPassword,
-        rol_id: 1, // Rol de administrador
-        persona_id: persona.id, // Relación con la persona creada
-      },
-      { transaction: t }
-    );
-
-    // Validar que la creación de Usuario fue exitosa
-    if (!nuevoUsuario) {
-      await t.rollback();
-      return res.status(500).json({
-        success: false,
-        message: "Error al crear usuario",
-        code: "USER_CREATION_ERROR",
-      });
-    }
-
-    await t.commit(); // Confirmar transacción
-
-    res.status(201).json({
-      success: true,
-      message: "Administrador creado correctamente",
-      data: {
-        id: nuevoUsuario.id,
-        email: nuevoUsuario.email,
-      },
-    });
-  } catch (error) {
-    await t.rollback(); // Revertir transacción en caso de error
-    console.error("Error al crear administrador:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error en el servidor",
-      code: "SERVER_ERROR",
-    });
-  }
-};
-
 module.exports = {
+  CrearUsuario,
   obtenerUsuarioActual,
+  obtenerUsuarioPorId,
   actualizarUsuario,
-  cambiarContrasena,
-  crearAdmin
+  cambiarContrasena
 };

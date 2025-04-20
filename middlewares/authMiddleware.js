@@ -112,10 +112,8 @@ const verificarAdmin = roleMiddleware(["admin", 1]);
 const verificarEntrenador = roleMiddleware(["entrenador", 2]);
 const verificarJugador = roleMiddleware(["jugador", 3]);
 
-// Middleware para verificar propiedad o admin
-const verificarUsuarioOAdmin = (req, res, next) => {
-  const requestedUserId = req.params.id || req.body.userId;
-  
+// Middleware para verificar
+const verificarUsuarioAutenticado = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ 
       success: false,
@@ -123,16 +121,7 @@ const verificarUsuarioOAdmin = (req, res, next) => {
       code: "AUTH_REQUIRED"
     });
   }
-
-  if (req.user.id == requestedUserId || req.user.role === 1 || req.user.roleName === "admin") {
-    return next();
-  }
-
-  res.status(403).json({
-    success: false,
-    message: "Acceso denegado. Solo puedes realizar esta acción sobre tu propio usuario o siendo administrador",
-    code: "OWNERSHIP_REQUIRED"
-  });
+  next();
 };
 
 // Configuración de cookie-parser
@@ -149,6 +138,6 @@ module.exports = {
   verificarAdmin,
   verificarEntrenador,
   verificarJugador,
-  verificarUsuarioOAdmin,
+  verificarUsuarioAutenticado,
   cookieParser: cookieParserMiddleware
 };

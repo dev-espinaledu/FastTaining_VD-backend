@@ -122,6 +122,59 @@ exports.solicitarRecuperacion = async (req, res) => {
   }
 };
 
+exports.cambiarContrasena = async (req, res) => {
+  try {
+    const { contrasenaActual, nuevaContrasena } = req.body;
+    const usuarioId = req.user.id; // Obtenido del token JWT
+
+    // Validar formato de contraseña
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(nuevaContrasena)) {
+      return res.status(400).json({
+        success: false,
+        message: "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo especial.",
+        code: "INVALID_PASSWORD_FORMAT"
+      });
+    }
+
+    const usuario = await Usuario.findByPk(usuarioId);
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    // Verificar contraseña actual
+    const valido = await bcrypt.compare(contrasenaActual, usuario.password);
+    if (!valido) {
+      return res.status(401).json({
+        success: false,
+        message: "Contraseña actual incorrecta",
+        code: "INVALID_CURRENT_PASSWORD"
+      });
+    }
+
+    // Actualizar contraseña
+    const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+    await usuario.update({ password: hashedPassword });
+
+    res.json({
+      success: true,
+      message: "Contraseña actualizada exitosamente"
+    });
+
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      code: "SERVER_ERROR"
+    });
+  }
+};
+
 exports.restablecerContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;
@@ -154,7 +207,7 @@ exports.restablecerContrasena = async (req, res) => {
     }
 
     // Calcular expiración
-    const fechaExpiracion = new Date(tokenRecord.createdAt.getTime() + 3600000); // 1 hora :p
+    const fechaExpiracion = new Date(tokenRecord.createdAt.getTime() + 10 * 60 * 1000); // 10 minutos jeje
     if (fechaExpiracion < new Date()) {
       return res.status(400).json({
         success: false,

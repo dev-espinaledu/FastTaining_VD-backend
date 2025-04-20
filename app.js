@@ -43,6 +43,7 @@ app.use(
 app.options("*", cors());
 
 // Rutas API
+app.use("/api", require("./routes/adminRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api", require("./routes/jugadorRoutes"));
 app.use("/api", require("./routes/rolRoutes"));
@@ -53,6 +54,7 @@ app.use("/api", require("./routes/datosEntrenamientoRoutes"));
 app.use("/api", require("./routes/estadisticasRoutes"));
 app.use("/api", require("./routes/usuarioRoutes"));
 app.use("/api", require("./routes/personaRoutes"));
+app.use("/api", require("./routes/perfilRoutes"));
 app.use("/api/promedios", promedioRoutes);
 
 // Error 404

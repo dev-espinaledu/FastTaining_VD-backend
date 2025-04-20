@@ -29,7 +29,7 @@ const enviarCorreoRecuperacion = async (email, token) => {
             <h2>Solicitud de recuperación de contraseña</h2>
             <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
             <a href="${resetLink}" target="_blank">Restablecer contraseña</a>
-            <p>Este enlace expirará en 1 hora.</p>
+            <p>Este enlace expirará en 10 minutos.</p>
             `,
         }; 
 

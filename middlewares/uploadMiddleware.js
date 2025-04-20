@@ -1,32 +1,42 @@
 const multer = require('multer');
+const { cloudinary } = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
-const storage = multer.memoryStorage(); // Almacena en memoria en lugar de disco
+// Configuración de Multer
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-const fileFilter = (req, file, cb) => {
-  const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  if (validTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Solo imágenes JPEG, PNG o WEBP'), false);
-  }
+// Función para subir a Cloudinary
+const uploadToCloudinary = (buffer, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'auto',
+        ...options
+      }, 
+      (error, result) => {
+        if (result) resolve(result);
+        else reject(error);
+      }
+    );
+    
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
 };
 
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
-});
+// Middleware para subida única de archivos
+const singleUpload = upload.single('foto_perfil');
+
+// Middleware para manejar errores de subida
+const handleUploadErrors = (err, req, res, next) => {
+  if (err) {
+    // Manejo de errores...
+  }
+  next();
+};
 
 module.exports = {
-  singleUpload: upload.single('foto_perfil'),
-  handleUploadErrors: (err, req, res, next) => {
-    if (err) {
-      return res.status(400).json({
-        success: false,
-        message: err.message,
-        code: 'UPLOAD_ERROR'
-      });
-    }
-    next();
-  }
+  singleUpload,
+  uploadToCloudinary,
+  handleUploadErrors
 };
