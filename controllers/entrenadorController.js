@@ -147,7 +147,7 @@ const actualizarEntrenador = async (req, res) => {
 
 const verPerfil = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
+    const usuarioId = req.params.id;
 
     const entrenador = await Entrenador.findOne({
       where: { usuario_id: usuarioId },
@@ -197,6 +197,7 @@ const verPerfil = async (req, res) => {
 
 // Actualizar verificarPerfilCompleto
 const verificarPerfilCompleto = async (req, res) => {
+  console.log("verificando el perfil del entrenador:", req.params.id);
   try {
     const usuarioId = req.params.id;
 

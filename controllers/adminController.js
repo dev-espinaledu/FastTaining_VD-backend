@@ -115,7 +115,7 @@ const crearAdministrador = async (req, res) => {
 
     const persona = await Persona.create(
       { nombre, apellido, telefono },
-      { transaction: t }
+      { transaction: t },
     );
 
     const usuario = await Usuario.create(
@@ -125,14 +125,14 @@ const crearAdministrador = async (req, res) => {
         persona_id: persona.id,
         rol_id: 1, // Rol de administrador
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     const administrador = await Administrador.create(
       {
         usuario_id: usuario.id,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -179,7 +179,11 @@ const actualizarAdministrador = async (req, res) => {
       transaction: t,
     });
 
-    if (!administrador || !administrador.usuarios || !administrador.usuarios.personas) {
+    if (
+      !administrador ||
+      !administrador.usuarios ||
+      !administrador.usuarios.personas
+    ) {
       await t.rollback();
       return res.status(404).json({
         success: false,
@@ -190,7 +194,7 @@ const actualizarAdministrador = async (req, res) => {
 
     await administrador.usuarios.personas.update(
       { nombre, apellido, telefono },
-      { transaction: t }
+      { transaction: t },
     );
 
     if (email) {
@@ -254,8 +258,9 @@ const eliminarAdministrador = async (req, res) => {
 // Funciones específicas para el perfil
 const verPerfil = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
-    
+    const usuarioId = req.params.id;
+    console.log(usuarioId);
+
     const administrador = await Administrador.findOne({
       where: { usuario_id: usuarioId },
       include: [
@@ -266,18 +271,20 @@ const verPerfil = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-              attributes: ["nombre", "apellido", "telefono", "foto_perfil"]
-            }
-          ]
-        }
-      ]
+              attributes: ["nombre", "apellido", "telefono", "foto_perfil"],
+            },
+          ],
+        },
+      ],
     });
+
+    console.log(administrador);
 
     if (!administrador) {
       return res.status(404).json({
         success: false,
         message: "Perfil de administrador no encontrado",
-        code: "ADMIN_PROFILE_NOT_FOUND"
+        code: "ADMIN_PROFILE_NOT_FOUND",
       });
     }
 
@@ -289,23 +296,23 @@ const verPerfil = async (req, res) => {
         apellido: administrador.usuarios.personas.apellido,
         telefono: administrador.usuarios.personas.telefono,
         foto_perfil: administrador.usuarios.personas.foto_perfil,
-        usuario_id: usuarioId
-      }
+        usuario_id: usuarioId,
+      },
     });
   } catch (error) {
     console.error("Error al obtener perfil de administrador:", error);
     res.status(500).json({
       success: false,
       message: "Error interno al obtener perfil",
-      code: "INTERNAL_SERVER_ERROR"
+      code: "INTERNAL_SERVER_ERROR",
     });
   }
 };
 
 const verificarPerfilCompleto = async (req, res) => {
   try {
-    const usuarioId = req.user.id;
-    
+    const usuarioId = req.params.id;
+
     const administrador = await Administrador.findOne({
       where: { usuario_id: usuarioId },
       include: [
@@ -316,25 +323,26 @@ const verificarPerfilCompleto = async (req, res) => {
             {
               model: Persona,
               as: "personas",
-              attributes: ["nombre", "apellido", "telefono"]
-            }
-          ]
-        }
-      ]
+              attributes: ["nombre", "apellido", "telefono"],
+            },
+          ],
+        },
+      ],
     });
+    console.log(administrador);
 
     if (!administrador) {
       return res.json({
         success: true,
         profileComplete: false,
-        missingFields: ["all"]
+        missingFields: ["all"],
       });
     }
 
     const camposRequeridos = {
       nombre: administrador.usuarios.personas.nombre,
       apellido: administrador.usuarios.personas.apellido,
-      telefono: administrador.usuarios.personas.telefono
+      telefono: administrador.usuarios.personas.telefono,
     };
 
     const camposFaltantes = Object.entries(camposRequeridos)
@@ -344,14 +352,14 @@ const verificarPerfilCompleto = async (req, res) => {
     res.json({
       success: true,
       profileComplete: camposFaltantes.length === 0,
-      missingFields: camposFaltantes
+      missingFields: camposFaltantes,
     });
   } catch (error) {
     console.error("Error verificando perfil de administrador:", error);
     res.status(500).json({
       success: false,
       message: "Error interno al verificar perfil",
-      code: "INTERNAL_SERVER_ERROR"
+      code: "INTERNAL_SERVER_ERROR",
     });
   }
 };
