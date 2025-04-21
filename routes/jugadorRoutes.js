@@ -24,14 +24,14 @@ router.get(
   "/jugador/perfil/:id",
   authMiddleware,
   roleMiddleware("jugador"),
-  jugadorController.verPerfil,
+  jugadorController.verPerfil
 );
 
 router.get(
   "/jugador/verificar-perfil/:userId",
   authMiddleware,
   roleMiddleware("jugador"),
-  jugadorController.verificarPerfilCompleto,
+  jugadorController.verificarPerfilCompleto
 );
 
 // Estadisticas del jugador y entrenamientos

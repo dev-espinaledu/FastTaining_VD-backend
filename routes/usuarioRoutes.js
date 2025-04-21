@@ -12,15 +12,22 @@ router.post("/usuarios/crear", usuarioController.CrearUsuario);
 // Obtener información del usuario actual
 router.get('/usuario/actual', authMiddleware, usuarioController.obtenerUsuarioActual);
 
-// Actualizar información del usuario
+// Ruta para actualizar datos del perfil
 router.put(
-  "/usuario/perfil",
+  '/usuario/perfil',
+  authMiddleware,
+  validateProfileData,
+  usuarioController.actualizarUsuario
+);
+
+// Ruta para actualizar solo la imagen
+router.put(
+  '/usuario/perfil/imagen',
   authMiddleware,
   singleUpload,
-  validateProfileData,
   validateImage,
   handleUploadErrors,
-  usuarioController.actualizarUsuario
+  usuarioController.actualizarImagenPerfil
 );
 
 // Cambiar contraseña
