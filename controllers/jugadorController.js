@@ -407,7 +407,7 @@ const actualizarJugador = async (req, res) => {
 const actualizarCapacidadJugador = async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const { id } = req.params;
+    const id = req.params.id;
     const {
       altura,
       peso,
@@ -449,7 +449,7 @@ const actualizarCapacidadJugador = async (req, res) => {
       },
       { transaction: t },
     );
-
+    console.log("Jugador actualizado:", jugador);
     await t.commit();
     res.json({
       success: true,

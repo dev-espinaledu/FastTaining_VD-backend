@@ -65,7 +65,11 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
-      }
+      },
+      nombre_sesion:{
+        type: Sequelize.STRING,
+        allowNull:true
+      },
     });
   },
   async down(queryInterface, Sequelize) {

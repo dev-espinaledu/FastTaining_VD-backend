@@ -220,7 +220,7 @@ const verEntrenamientos = async (req, res) => {
         {
           model: DatoSesion,
           as: "datosSesion",
-          attributes: ["fecha", "objetivo"],
+          attributes: ["fecha", "objetivo","posicion","nombre_sesion"],
         },
       ],
     });
@@ -237,8 +237,10 @@ const verEntrenamientos = async (req, res) => {
       const datos = entrenamiento.datosSesion;
 
       return {
-        fecha: datos.fecha || "Fecha no disponible",
+        nombre_sesion: datos.nombre_sesion || "Sin nombre",
         objetivo: datos.objetivo || "Objetivo no disponible",
+        posicion: datos.posicion || "No encontrada",
+        fecha: datos.fecha || "Fecha no encontrada",
         fase_inicial: entrenamiento.fase_inicial || [],
         fase_central: entrenamiento.fase_central || [],
         fase_final: entrenamiento.fase_final || [],
@@ -280,13 +282,13 @@ const obtenerEntrenamientosPorJugador = async (req, res) => {
           where: {
             posicion: jugador.posicion,
           },
-          attributes: ["fecha", "objetivo"],
+          attributes: ["fecha", "objetivo","nombre_sesion"],
         },
       ],
     });
 
     if (entrenamientos.length === 0) {
-      return res.status(200).json({
+      return res.status(404).json({
         mensaje: `No se encontraron entrenamientos para la posición ${jugador.posicion}`,
       });
     }
@@ -295,6 +297,7 @@ const obtenerEntrenamientosPorJugador = async (req, res) => {
       const datos = entrenamiento.datosSesion;
       return {
         id: entrenamiento.id,
+        nombre: datos.nombre_sesion,
         fecha: datos.fecha || "Fecha no disponible",
         objetivo: datos.objetivo || "Objetivo no disponible",
         posicion: jugador.posicion,

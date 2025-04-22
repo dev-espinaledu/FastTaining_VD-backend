@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     equipo_id:DataTypes.SMALLINT,
     fecha: DataTypes.DATE,
     objetivo: DataTypes.STRING,
+    nombre_sesion: DataTypes.STRING,
     posicion: DataTypes.ENUM(
       "delantero",
       "mediocampista",
