@@ -57,6 +57,9 @@ module.exports = {
       flexibilidad: {
         type: Sequelize.DOUBLE,
       },
+      nombre_sesion:{
+        type: Sequelize.STRING,
+      },
     
       createdAt: {
         allowNull: false,

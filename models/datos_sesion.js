@@ -36,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     resistencia_aerobica:DataTypes.DOUBLE,
     resistencia_anaerobica:DataTypes.DOUBLE,
     flexibilidad: DataTypes.DOUBLE,
+    nombre_sesion: DataTypes.STRING
 
   }, {
     sequelize,

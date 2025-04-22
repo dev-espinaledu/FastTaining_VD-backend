@@ -346,9 +346,22 @@ const verificarPerfilCompleto = async (req, res) => {
 
 const obtenerEntrenadorPorUsuario = async (req, res) => {
   const { id } = req.params;
-  const entrenador = await Entrenador.findOne({ where: { usuario_id: id } });
-  res.json(entrenador);
+  try{
+    console.log("Está accediendo a la función de obtenerEntrenadorPorUsuario")
+    const entrenador = await Entrenador.findOne({ where: { usuario_id: id } });
+    console.log("Lo mismo x2")
+
+    res.json(entrenador);
+    console.log("Lo mismo x3")
+
+  }catch(e){
+    console.error("Error verificando perfil:", error);
+    res.status(500).json({ 
+      message: "Error al verificar perfil", e
+    });
+  }
 };
+
 
 module.exports = { 
   verEntrenadores, 

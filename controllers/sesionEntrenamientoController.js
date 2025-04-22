@@ -237,9 +237,10 @@ const verEntrenamientos = async (req, res) => {
       const datos = entrenamiento.datosSesion;
 
       return {
-        nombre:datos.nombre_sesion || "Nombre sin definir ",
+        nombre:datos.nombre_sesion,
         objetivo: datos.objetivo || "Objetivo no disponible",
         posicion: datos.posicion || "No encontrada",
+        fecha: datos.fecha || "Fecha no encontrada",
         fase_inicial: entrenamiento.fase_inicial || [],
         fase_central: entrenamiento.fase_central || [],
         fase_final: entrenamiento.fase_final || [],

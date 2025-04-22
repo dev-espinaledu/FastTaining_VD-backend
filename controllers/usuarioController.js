@@ -1,4 +1,4 @@
-const { Usuario, Persona, Jugador, Entrenador, sequelize } = require("../models");
+const { Usuario, Persona, Jugador, Entrenador, Administrador,sequelize } = require("../models");
 const bcrypt = require("bcryptjs");
 const dotenv = require('dotenv');
 const {correoContraseña}=require('../utils/EmailPasword')
@@ -392,19 +392,61 @@ const crearAdmin = async (req, res) => {
   }
 }
 
-//-------------------------------------------------------------------------------------------
 
-const obtenerUsers = async(req, res)=>{
+const eliminarUser = async(req,res)=>{
+  const {id}=req.params;
   try{
-    console.log("Está accediento a la obtenerUsers")
-    const usuarios = await Usuario.findAll({});
-    const usuariosPlano = usuarios.map(user => user.get());
-    return res.json(usuariosPlano);
+    const user = Usuario.findByPk(id)
+    
   }catch(e){
-    console.error(`Error desde verUsuarios: ${e}`)
-    return res.status(500).json({mjs:`Error desde el verUsuarios: ${e}`})
+    console.error(`Error desde EliminarUSer ${e}`)
+    return res.status(500).json({mjs:"Error desde el método EliminarUser"})
   }
 }
+//-------------------------------------------------------------------------------------------
+
+const obtenerUsers = async (req, res) => {
+  try {
+    console.log("Está accediendo a obtenerUsers");
+
+    const usuarios = await Usuario.findAll({
+      include: [
+        {
+          model: Jugador,
+          as: "jugadores", 
+          attributes: ["equipo_id"],
+          required: false, 
+        },
+        {
+          model: Entrenador,
+          as: "entrenadores",
+          attributes: ["equipo_id"],
+          required: false,
+        },
+      ],
+    });
+
+    // Mapeamos el resultado para mostrar solo un equipo_id según el rol
+    const usuariosPlano = usuarios.map(user => {
+      const datos = user.get();
+      let equipo_id = null;
+      if (datos.rol_id === 2 && datos.entrenadores) {
+        equipo_id = datos.entrenadores.equipo_id;
+      } else if (datos.rol_id === 3 && datos.jugadores) {
+        equipo_id = datos.jugadores.equipo_id;
+      }
+      return {
+        ...datos,
+        equipo_id,
+      };
+    });
+
+    return res.json(usuariosPlano);
+  } catch (e) {
+    console.error(`Error desde verUsuarios: ${e}`);
+    return res.status(500).json({ mjs: `Error desde el verUsuarios: ${e}` });
+  }
+};
 
 module.exports = {
   CrearUsuario,

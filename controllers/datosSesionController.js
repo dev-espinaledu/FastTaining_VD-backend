@@ -16,7 +16,7 @@ const TomarDatosEntrenamiento = async (req, res) => {
   }
 };
 
-const RegistrarDatosPosición = async (req, res) => {
+const RegistrarDatosPosicion = async (req, res) => {
   const {equipoId} = req.params;  
   const { fecha, objetivo, posicion, nombre } = req.body;  
 
@@ -67,13 +67,14 @@ const RegistrarDatosPosición = async (req, res) => {
      
       res.status(201).json(newData);  
     } else {
-      res.status(404).json({ error: "No se encontraron datos para la posición y equipo especificados." });
+      console.error(`Error en RegistrarDatosPosicon ${e}`)
+      res.status(404).json({ error: "No se encontraron datos para la posición y equipo especificados.",e });
     }
 
   } catch (e) {
-    console.log(`Error en RegistrarDatosPosición: ${e}`);
+    console.log(`Error en RegistrarDatosPosicion: ${e}`);
     res.status(500).json({ error: e.message });
   }
 };
 
-module.exports = { RegistrarDatosPosición };
+module.exports = { RegistrarDatosPosicion };

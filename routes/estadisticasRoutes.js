@@ -25,11 +25,11 @@ router.post(
 );
 
 // Ruta para obtener estadísticas del equipo (solo entrenadores pueden acceder)
-router.get(
+/* router.get(
   "/estadisticas/equipo/:id",
   authMiddleware,
   verificarEntrenador,
   estadisticasController.obtenerEstadisticasEquipo,
-);
+); */
 
 module.exports = router;

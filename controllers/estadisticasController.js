@@ -149,7 +149,7 @@ const agregarMasRegistrosEstadisticasJugador = async (req, res) => {
   }
 }
 
-const estadisticasEjemplo = require("../data/estadisticasEjemplo");
+/* const estadisticasEjemplo = require("../data/estadisticasEjemplo");
 
 // Función para generar las fechas dinámicamente
 const generarFechas = (cantidad) => {
@@ -211,11 +211,11 @@ const obtenerEstadisticasEquipo = (req, res) => {
 
   res.json({ fechas, ...estadisticasFiltradas });
 };
-
+ */
 module.exports = {
   obtenerEstadisticasJugador,
   agregarDatosEstadisticasJugador,
-  generarFechas,
-  obtenerEstadisticasEquipo,
+ /*  generarFechas, */
+ /*  obtenerEstadisticasEquipo, */
   agregarMasRegistrosEstadisticasJugador
 };
