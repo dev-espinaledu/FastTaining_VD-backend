@@ -1,8 +1,7 @@
-<<<<<<< HEAD
 /node_modules/
-
+*.env
 *.log      # Ignora todos los archivos .log
 *.tmp      # Ignora todos los archivos .tmp
-=======
 node_modules
->>>>>>> cea4569ed5c983bf7ffed93ab527d2b19dd6d191
+
+.env
