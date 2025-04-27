@@ -16,5 +16,6 @@
 ### Firebase Patch ###
 .runtimeconfig.json
 .firebase/
+services/firebase-service-account.json
 
 # End of https://www.toptal.com/developers/gitignore/api/dotenv,firebase
