@@ -1,4 +1,4 @@
-const { Equipo, Jugador } = require("../models");
+const { Equipo, Jugador, Notificacion } = require("../models");
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const s3 = require('../config/cloudflare');
 require('dotenv').config();
@@ -41,6 +41,31 @@ const createTeam = async (req, res) => {
   }
 };
 
+const asignarJugadorAEquipo = async (req, res) => {
+  const { equipo_id, jugador_id } = req.body;
+  
+  try {
+    const equipo = await Equipo.findByPk(equipo_id);
+    if (!equipo) {
+      return res.status(404).json({ error: "Equipo no encontrado" });
+    }
+
+    await Jugador.update({ equipo_id }, { where: { id: jugador_id } });
+
+    // NOTIFICACIONES - Solo se agrega esta parte
+    await Notificacion.create({
+      usuario_id: jugador_id,
+      tipo: 'asignacion_equipo',
+      message: `¡Has sido asignado al equipo ${equipo.nombre}!`,
+      metadata: { equipo_id }
+    });
+
+    res.status(200).json({ message: "Jugador asignado correctamente al equipo" });
+  } catch (error) {
+    console.error("Error asignando jugador a equipo:", error);
+    res.status(500).json({ error: "Error al asignar jugador al equipo" });
+  }
+};
 
 // Obtener todos los equipos
 const getTeams = async (req, res) => {
@@ -81,4 +106,4 @@ const obtenerEquipoPorId = async (req, res) => {
   }
 }
 
-module.exports = { createTeam, getTeams, obtenerEquipoPorId };
+module.exports = { createTeam, asignarJugadorAEquipo, getTeams, obtenerEquipoPorId };

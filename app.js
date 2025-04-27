@@ -5,6 +5,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const fs = require("fs");
 const promedioRoutes = require("./routes/promedioRoutes");
+const notificacionesRoutes = require('./routes/notificacionesRoutes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use("/api", require("./routes/estadisticasRoutes"));
 app.use("/api", require("./routes/usuarioRoutes"));
 app.use("/api", require("./routes/personaRoutes"));
 app.use("/api/promedios", promedioRoutes);
+app.use('/api', notificacionesRoutes);
 
 // Error 404
 app.use((req, res, next) => {

@@ -1,4 +1,4 @@
-const { DatoSesion, Entrenamiento, Equipo, Jugador } = require("../models");
+const { DatoSesion, Entrenamiento, Equipo, Jugador, Notificacion } = require("../models");
 require("dotenv").config();
 
 const generarEntrenamiento = async (req, res) => {
@@ -141,6 +141,34 @@ const generarEntrenamiento = async (req, res) => {
       fase_final: entrenamiento.fase_final,
     });
 
+    // NOTIFICACIONES - Solo se agrega esta parte
+    if (sesion.jugador_id) {
+      await Notificacion.create({
+        usuario_id: sesion.jugador_id,
+        tipo: 'plan_entrenamiento',
+        message: '¡Nuevo plan de entrenamiento disponible!',
+        metadata: { entrenamiento_id: nuevoEntrenamiento.id }
+      });
+    }
+    
+    if (sesion.equipo_id) {
+      const jugadores = await Jugador.findAll({ 
+        where: { equipo_id: sesion.equipo_id },
+        attributes: ['id']
+      });
+      
+      await Promise.all(
+        jugadores.map(jugador => 
+          Notificacion.create({
+            usuario_id: jugador.id,
+            tipo: 'plan_entrenamiento',
+            message: 'Nuevo plan de entrenamiento para tu equipo',
+            metadata: { entrenamiento_id: nuevoEntrenamiento.id }
+          })
+        )
+      );
+    }
+
     console.log("Entrenamiento creado con éxito");
     return res.status(201).json(nuevoEntrenamiento);
   } catch (error) {
@@ -148,8 +176,6 @@ const generarEntrenamiento = async (req, res) => {
     return res.status(500).json({ error: "Error generando entrenamiento" });
   }
 };
-
-//-------------------------------------
 
 const verEntrenamientoIndividual = async (req, res) => {
   try {
@@ -210,8 +236,6 @@ const verEntrenamientoIndividual = async (req, res) => {
   }
 };
 
-//-----------------------------------------------
-
 const verEntrenamientos = async (req, res) => {
   try {
     console.log("Está accediendo a la funcionalidad de VerEntrenamiento");
@@ -257,7 +281,6 @@ const verEntrenamientos = async (req, res) => {
   }
 };
 
-// Obtiene todos los entrenamientos de un jugador
 const obtenerEntrenamientosPorJugador = async (req, res) => {
   const { id } = req.params;
 
@@ -325,8 +348,6 @@ const obtenerEntrenamientosPorJugador = async (req, res) => {
     });
   }
 };
-
-// Obtener todos los entrenamientos hechos por un jugador
 
 module.exports = {
   generarEntrenamiento,

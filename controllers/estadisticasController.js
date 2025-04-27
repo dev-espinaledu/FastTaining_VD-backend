@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const { Historial } = require("../models");
+const { Historial, Notificacion } = require("../models");
 
 const obtenerEstadisticasJugador = async (req, res) => {
   const { id } = req.params;
@@ -104,6 +104,17 @@ const agregarDatosEstadisticasJugador = async (req, res) => {
       resistencia_aerobica,
       resistencia_anaerobica,
       flexibilidad,
+    });
+
+    // NOTIFICACIONES - Solo se agrega esta parte
+    await Notificacion.create({
+      usuario_id: jugador_id,
+      tipo: 'estadisticas',
+      message: 'Tus estadísticas han sido actualizadas',
+      metadata: { 
+        estadistica_id: nuevoRegistro.id,
+        fecha: nuevoRegistro.fecha_registro 
+      }
     });
 
     res.status(201).json({

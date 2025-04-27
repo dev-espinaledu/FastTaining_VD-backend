@@ -1,7 +1,20 @@
-/node_modules/
-*.env
+
+# Created by https://www.toptal.com/developers/gitignore/api/dotenv,firebase
+# Edit at https://www.toptal.com/developers/gitignore?templates=dotenv,firebase
+
 *.log      # Ignora todos los archivos .log
 *.tmp      # Ignora todos los archivos .tmp
-node_modules
 
+### dotenv ###
 .env
+
+### Firebase ###
+.idea
+**/node_modules/*
+**/.firebaserc
+
+### Firebase Patch ###
+.runtimeconfig.json
+.firebase/
+
+# End of https://www.toptal.com/developers/gitignore/api/dotenv,firebase
